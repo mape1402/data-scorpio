@@ -1,0 +1,6 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <PackageId>DataScorpio</PackageId>
+    <Description>Typed, secure, provider-aware query engine for .NET.</Description>
+  </PropertyGroup>
+</Project>

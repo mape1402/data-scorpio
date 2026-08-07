@@ -1,2 +1,8 @@
 <Solution>
+  <Folder Name="/src/">
+    <Project Path="src/DataScorpio/DataScorpio.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/DataScorpio.Tests/DataScorpio.Tests.csproj" />
+  </Folder>
 </Solution>
