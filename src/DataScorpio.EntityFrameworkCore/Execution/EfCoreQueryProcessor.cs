@@ -1,14 +1,16 @@
-namespace DataScorpio.Execution;
+namespace DataScorpio.EntityFrameworkCore.Execution;
 
+using DataScorpio.Execution;
 using DataScorpio.Parsing;
 using DataScorpio.Profiles;
 using DataScorpio.Querying;
 using DataScorpio.Validation;
+using Microsoft.EntityFrameworkCore;
 
 /// <summary>
-/// Default synchronous query processor for provider-neutral <see cref="IQueryable{T}"/> sources.
+/// Default Entity Framework Core query processor.
 /// </summary>
-public sealed class QueryProcessor : IQueryProcessor
+public sealed class EfCoreQueryProcessor : IEfCoreQueryProcessor
 {
     private readonly IQueryParser parser;
     private readonly IQueryDescriptorValidator validator;
@@ -16,13 +18,9 @@ public sealed class QueryProcessor : IQueryProcessor
     private readonly IQueryProfileRegistry profiles;
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="QueryProcessor"/> class.
+    /// Initializes a new instance of the <see cref="EfCoreQueryProcessor"/> class.
     /// </summary>
-    /// <param name="parser">The query parser.</param>
-    /// <param name="validator">The descriptor validator.</param>
-    /// <param name="applier">The query applier.</param>
-    /// <param name="profiles">The profile registry.</param>
-    public QueryProcessor(
+    public EfCoreQueryProcessor(
         IQueryParser parser,
         IQueryDescriptorValidator validator,
         IQueryableQueryApplier applier,
@@ -35,16 +33,18 @@ public sealed class QueryProcessor : IQueryProcessor
     }
 
     /// <inheritdoc/>
-    public QueryExecutionResult<TEntity> Execute<TEntity>(
-        IQueryable<TEntity> source,
-        QueryRequest request)
-        => Execute(source, request, profiles.GetProfile<TEntity>());
-
-    /// <inheritdoc/>
-    public QueryExecutionResult<TEntity> Execute<TEntity>(
+    public Task<QueryExecutionResult<TEntity>> ExecuteAsync<TEntity>(
         IQueryable<TEntity> source,
         QueryRequest request,
-        QueryProfileDefinition profile)
+        CancellationToken cancellationToken = default)
+        => ExecuteAsync(source, request, profiles.GetProfile<TEntity>(), cancellationToken);
+
+    /// <inheritdoc/>
+    public async Task<QueryExecutionResult<TEntity>> ExecuteAsync<TEntity>(
+        IQueryable<TEntity> source,
+        QueryRequest request,
+        QueryProfileDefinition profile,
+        CancellationToken cancellationToken = default)
     {
         if (source == null)
             throw new ArgumentNullException(nameof(source));
@@ -63,15 +63,15 @@ public sealed class QueryProcessor : IQueryProcessor
 
         var unpagedDescriptor = descriptor.WithPage(PageDescriptor.Unpaged);
         var filteredAndSorted = applier.Apply(source, unpagedDescriptor, profile);
-        var rowCount = filteredAndSorted.LongCount();
+        var rowCount = await filteredAndSorted.LongCountAsync(cancellationToken);
         var pageCount = CalculatePageCount(rowCount, descriptor.Page.PageSize);
         var pageNumber = CalculatePageNumber(descriptor.Page.PageNumber, pageCount);
         var pageSize = descriptor.Page.PageSize ?? Convert.ToInt32(rowCount);
-        var paged = applier.Apply(source, descriptor, profile).ToArray();
+        var items = await applier.Apply(source, descriptor, profile).ToListAsync(cancellationToken);
 
         return QueryExecutionResult<TEntity>.Success(new QueryResult<TEntity>
         {
-            Items = paged,
+            Items = items,
             PageNumber = pageNumber,
             PageSize = pageSize,
             RowCount = rowCount,
