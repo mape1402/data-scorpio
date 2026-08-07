@@ -11,17 +11,25 @@ This document captures the intended architecture for DataScorpio.
 ## Project Shape
 
 - `src/DataScorpio` contains the primary package.
-- `tests/DataScorpio.Tests` contains unit and integration tests.
+- `src/DataScorpio.EntityFrameworkCore` contains provider-specific async EF Core execution.
+- `src/DataScorpio.AspNetCore` contains query string binding helpers.
+- `src/DataScorpio.TurtlePath` contains the TurtlePath criteria adapter.
+- `src/DataScorpio.Testing` contains reusable consumer test helpers.
+- `src/DataScorpio.DynaBee` contains the opt-in DynaBee acceleration boundary.
+- `tests/DataScorpio.Tests` contains core unit and integration tests.
 - `benchmarks/DataScorpio.Benchmarks` contains performance scenarios when needed.
 - `samples` contains runnable examples for supported use cases.
 
 ## Decisions
 
-Record durable architecture decisions here as the project takes shape.
+- Core remains independent from ASP.NET Core, EF Core, TurtlePath, OctoMap, Crabalidator, and DynaBee.
+- Sieve compatibility is implemented as a parser/migration mode, not as the native internal model.
+- TurtlePath integration is adapter-owned and strict by default for new DataScorpio usage.
+- Search is implemented before projection because it is immediately useful and provider-safe with configured fields.
+- DynaBee lives in a separate package so acceleration can evolve without coupling the core public API.
 
 ## Open Questions
 
-- What is the first production use case?
-- Which public abstractions should be stable in the first package?
-- Which integrations belong in the core package and which should live in separate packages?
-
+- How far should native string syntax diverge from Sieve once JSON descriptors are stable?
+- Which projection adapter should ship first, OctoMap or a provider-neutral projection contract only?
+- Should contextual scopes be profile-only, service-driven, or both?

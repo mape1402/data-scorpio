@@ -5,12 +5,53 @@ This document should describe the public DataScorpio API as it is implemented.
 ## Packages
 
 - `DataScorpio`
+- `DataScorpio.EntityFrameworkCore`
+- `DataScorpio.AspNetCore`
+- `DataScorpio.TurtlePath`
+- `DataScorpio.Testing`
+- `DataScorpio.DynaBee`
 
 ## Public Surface
 
-Add stable types, extension methods, configuration options, and examples here as they are introduced.
+- `QueryRequest` captures raw incoming filters, sorts, search, and paging.
+- `QueryDescriptor` is the parsed provider-neutral query model.
+- `SieveQueryParser` parses Sieve-compatible filter and sort strings.
+- `QueryProfile<TEntity>` and `IQueryProfileBuilder<TEntity>` define allowed query fields.
+- `QueryDescriptorValidator` rejects unknown fields, unsupported operators, and invalid paging.
+- `QueryableQueryApplier` applies validated descriptors to `IQueryable<TEntity>`.
+- `QueryProcessor` parses, validates, applies, and returns `QueryExecutionResult<TEntity>`.
+- `AddDataScorpio(...)` registers core parser, validator, applier, registry, and processor services.
+- `AddDataScorpioEntityFrameworkCore(...)` registers EF Core async query execution.
+- `ToDataScorpioQueryRequest(...)` maps ASP.NET Core query collections to `QueryRequest`.
+- `UseDataScorpio(...)` swaps TurtlePath criteria filtering/sorting to DataScorpio.
+- `QueryTestHost<TEntity>` and `QueryResultAssertions` support consumer tests.
+- `AddDataScorpioDynaBee()` registers the current DynaBee acceleration boundary.
 
 ## Examples
 
-Add minimal runnable examples once the first API pass exists.
+### Core
 
+```csharp
+var descriptor = parser.Parse(new QueryRequest
+{
+    Filters = "Name@=*ada,Status==Active",
+    Sorts = "-CreatedAt",
+    Search = "north",
+    PageNumber = 1,
+    PageSize = 25
+});
+
+var result = processor.Execute(customers.AsQueryable(), descriptor, profile);
+```
+
+### Dependency Injection
+
+```csharp
+services.AddDataScorpio(registry =>
+{
+    registry.AddProfile<CustomerQueryProfile, Customer>();
+});
+
+services.AddDataScorpioEntityFrameworkCore();
+services.AddDataScorpioDynaBee();
+```
