@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <PackageId>DataScorpio.AspNetCore</PackageId>
+    <Description>ASP.NET Core query binding adapter for DataScorpio.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    <ProjectReference Include="..\DataScorpio\DataScorpio.csproj" />
+  </ItemGroup>
+</Project>
