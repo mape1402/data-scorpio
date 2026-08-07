@@ -1,12 +1,27 @@
 namespace DataScorpio.Tests.DependencyInjection;
 
 using DataScorpio.Execution;
+using DataScorpio.Parsing.Json;
 using DataScorpio.Profiles;
 using DataScorpio.Querying;
 using Microsoft.Extensions.DependencyInjection;
 
 public sealed class DataScorpioServiceCollectionExtensionsTests
 {
+    [Fact]
+    public void AddDataScorpio_registers_core_and_native_json_services()
+    {
+        var services = new ServiceCollection();
+
+        services.AddDataScorpio(profiles =>
+            profiles.AddProfile(new CustomerQueryProfile()));
+
+        using var provider = services.BuildServiceProvider();
+
+        Assert.NotNull(provider.GetRequiredService<IQueryProcessor>());
+        Assert.NotNull(provider.GetRequiredService<IJsonQueryDescriptorParser>());
+    }
+
     [Fact]
     public void AddDataScorpioSieveCompatibility_registers_core_services()
     {

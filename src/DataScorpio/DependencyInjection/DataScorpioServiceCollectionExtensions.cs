@@ -2,6 +2,7 @@ namespace Microsoft.Extensions.DependencyInjection;
 
 using DataScorpio.Execution;
 using DataScorpio.Parsing;
+using DataScorpio.Parsing.Json;
 using DataScorpio.Parsing.Sieve;
 using DataScorpio.Profiles;
 using DataScorpio.Validation;
@@ -12,6 +13,19 @@ using DataScorpio.Validation;
 public static class DataScorpioServiceCollectionExtensions
 {
     /// <summary>
+    /// Registers DataScorpio core services with native descriptor support and Sieve-compatible request parsing.
+    /// </summary>
+    /// <param name="services">The service collection.</param>
+    /// <param name="configureProfiles">The profile registry configuration.</param>
+    /// <returns>The same service collection.</returns>
+    public static IServiceCollection AddDataScorpio(
+        this IServiceCollection services,
+        Action<QueryProfileRegistryBuilder> configureProfiles)
+    {
+        return AddCore(services, configureProfiles);
+    }
+
+    /// <summary>
     /// Registers DataScorpio core services using the Sieve-compatible parser.
     /// </summary>
     /// <param name="services">The service collection.</param>
@@ -19,6 +33,13 @@ public static class DataScorpioServiceCollectionExtensions
     /// <returns>The same service collection.</returns>
     public static IServiceCollection AddDataScorpioSieveCompatibility(
         this IServiceCollection services,
+        Action<QueryProfileRegistryBuilder> configureProfiles)
+    {
+        return AddCore(services, configureProfiles);
+    }
+
+    private static IServiceCollection AddCore(
+        IServiceCollection services,
         Action<QueryProfileRegistryBuilder> configureProfiles)
     {
         if (services == null)
@@ -33,6 +54,7 @@ public static class DataScorpioServiceCollectionExtensions
 
         services.AddSingleton<IQueryProfileRegistry>(registry);
         services.AddSingleton<IQueryParser, SieveQueryParser>();
+        services.AddSingleton<IJsonQueryDescriptorParser, JsonQueryDescriptorParser>();
         services.AddSingleton<IQueryDescriptorValidator, QueryDescriptorValidator>();
         services.AddSingleton<IQueryableQueryApplier, QueryableQueryApplier>();
         services.AddSingleton<IQueryProcessor, QueryProcessor>();
