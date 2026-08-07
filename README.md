@@ -4,13 +4,22 @@
 [![NuGet](https://img.shields.io/nuget/v/DataScorpio.svg)](https://www.nuget.org/packages/DataScorpio)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-**DataScorpio** is a .NET project initialized from the OctoMap working structure.
+**DataScorpio** is an Elysium-owned .NET query engine for safe, typed, provider-aware filtering, sorting, paging, searching, validation, and query execution over `IQueryable` sources.
 
-This repository starts with the shared project scaffolding used across Elysium Coding packages: GitHub workflows, release checklist, changelog, package metadata, documentation placeholders, test and benchmark folders, and common build settings.
+The first milestone is a strong Sieve-compatible migration path for TurtlePath and existing APIs. DataScorpio parses raw query strings into structured descriptors, validates them against explicit query profiles, and applies provider-friendly expression trees.
 
 ## Status
 
-DataScorpio is in initial project setup.
+DataScorpio is in early implementation.
+
+Implemented foundation:
+
+- Typed query request and descriptor models.
+- TurtlePath-compatible query result metadata.
+- Query profiles with field allowlists, aliases, default sort, and max page size.
+- Sieve-compatible filter and sort parser.
+- Query descriptor validation.
+- `IQueryable` filter, sort, default sort, and paging applier.
 
 ## Requirements
 
@@ -34,10 +43,27 @@ dotnet build --configuration Release
 dotnet test --configuration Release --no-build
 ```
 
+## Example
+
+```csharp
+var profile = new CustomerQueryProfile().BuildDefinition();
+var parser = new SieveQueryParser();
+var applier = new QueryableQueryApplier();
+
+var descriptor = parser.Parse(new QueryRequest
+{
+    Filters = "Name@=*ada,Status==Active",
+    Sorts = "-CreatedAt",
+    PageNumber = 1,
+    PageSize = 25
+});
+
+var query = applier.Apply(customers.AsQueryable(), descriptor, profile);
+```
+
 ## Documentation
 
 - [Architecture](docs/ARCHITECTURE.md)
 - [API Reference](docs/DataScorpio.API.md)
 - [Roadmap](docs/ROADMAP.md)
 - [Release Process](docs/RELEASE.md)
-
