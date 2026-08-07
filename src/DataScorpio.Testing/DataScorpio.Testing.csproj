@@ -1,0 +1,10 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <PackageId>DataScorpio.Testing</PackageId>
+    <Description>Testing helpers for DataScorpio query profiles and requests.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\DataScorpio\DataScorpio.csproj" />
+  </ItemGroup>
+</Project>
