@@ -17,9 +17,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Core query request, descriptor, result, validation, and diagnostic models.
 - Typed query profile metadata with field allowlists, aliases, default sort, and max page size.
 - Sieve-compatible filter and sort parser with OR groups, escaping, null handling, and documented operator coverage.
+- Native JSON descriptor parser for JSON-first query payloads.
 - Query descriptor validation against profile metadata.
 - `IQueryable` descriptor applier for filters, sorts, default sort, and paging.
 - Configured multi-field search execution.
+- Allowlisted include metadata, validation, JSON parsing, and EF Core execution.
 - End-to-end query processor and dependency injection registration.
 - Entity Framework Core async query processor package.
 - ASP.NET Core query collection binding package.

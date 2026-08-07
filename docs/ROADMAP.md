@@ -1144,13 +1144,11 @@ Projection should follow search once the query descriptor, validation, filtering
 
 ## Immediate Next Steps
 
-1. Expand native JSON descriptor binding alongside the Sieve-compatible string parser.
-2. Add projection descriptors and a provider-neutral projection abstraction.
-3. Add include descriptors and EF Core include execution.
-4. Add specification/preset execution beyond descriptor storage.
-5. Add contextual scopes for authorization, multi-tenancy, and soft delete.
-6. Add descriptor/profile/expression caching and benchmarking.
-7. Replace the current DynaBee marker boundary with generated metadata and fast-path services.
+1. Add projection descriptors and a provider-neutral projection abstraction.
+2. Add specification/preset execution beyond descriptor storage.
+3. Add contextual scopes for authorization, multi-tenancy, and soft delete.
+4. Add descriptor/profile/expression caching and benchmarking.
+5. Replace the current DynaBee marker boundary with generated metadata and fast-path services.
 
 ## Current Implementation Snapshot
 
@@ -1160,8 +1158,10 @@ Completed in the first implementation pass:
 - Core request, descriptor, result, validation, and diagnostic models.
 - Profile builder with field allowlists, aliases, default sort, max page size, and search fields.
 - Sieve-compatible filtering/sorting parser with OR groups, escaping, null handling, and operator coverage.
+- Native JSON descriptor parser for JSON-first query payloads.
 - Descriptor validation against configured profile metadata.
 - `IQueryable` execution for filters, search, sorts, default sort, and paging.
+- Include descriptors, profile allowlists, JSON parsing, validation, and EF Core include execution.
 - End-to-end core query processor and dependency injection registration.
 - EF Core async query processor package.
 - ASP.NET Core query binding package.
@@ -1171,9 +1171,7 @@ Completed in the first implementation pass:
 
 Still pending from the full long-term roadmap:
 
-- Native JSON-first descriptor binder.
 - Projection execution and OctoMap adapter.
-- Includes and EF Core include allowlists.
 - Executable specifications and parameterized presets.
 - Authorization, tenant, and soft-delete scopes.
 - Query optimization, caching hints, compiled query hints, and DynaBee-generated fast paths.

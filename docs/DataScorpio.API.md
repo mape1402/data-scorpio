@@ -16,8 +16,10 @@ This document should describe the public DataScorpio API as it is implemented.
 - `QueryRequest` captures raw incoming filters, sorts, search, and paging.
 - `QueryDescriptor` is the parsed provider-neutral query model.
 - `SieveQueryParser` parses Sieve-compatible filter and sort strings.
+- `JsonQueryDescriptorParser` parses native JSON descriptors into `QueryDescriptor`.
 - `QueryProfile<TEntity>` and `IQueryProfileBuilder<TEntity>` define allowed query fields.
-- `QueryDescriptorValidator` rejects unknown fields, unsupported operators, and invalid paging.
+- `AllowInclude(...)` exposes provider include paths through profile allowlists.
+- `QueryDescriptorValidator` rejects unknown fields, unknown includes, unsupported operators, and invalid paging.
 - `QueryableQueryApplier` applies validated descriptors to `IQueryable<TEntity>`.
 - `QueryProcessor` parses, validates, applies, and returns `QueryExecutionResult<TEntity>`.
 - `AddDataScorpio(...)` registers core parser, validator, applier, registry, and processor services.
@@ -54,4 +56,19 @@ services.AddDataScorpio(registry =>
 
 services.AddDataScorpioEntityFrameworkCore();
 services.AddDataScorpioDynaBee();
+```
+
+### Native JSON
+
+```json
+{
+  "filters": [
+    { "field": "Status", "operator": "equals", "value": "Active" }
+  ],
+  "includes": [ "orders" ],
+  "sorts": [
+    { "field": "CreatedAt", "direction": "desc" }
+  ],
+  "page": { "pageNumber": 1, "pageSize": 25 }
+}
 ```
