@@ -1,6 +1,7 @@
 <Solution>
   <Folder Name="/src/">
     <Project Path="src/DataScorpio.AspNetCore/DataScorpio.AspNetCore.csproj" />
+    <Project Path="src/DataScorpio.DynaBee/DataScorpio.DynaBee.csproj" />
     <Project Path="src/DataScorpio.EntityFrameworkCore/DataScorpio.EntityFrameworkCore.csproj" />
     <Project Path="src/DataScorpio.Testing/DataScorpio.Testing.csproj" />
     <Project Path="src/DataScorpio.TurtlePath/DataScorpio.TurtlePath.csproj" />
@@ -8,11 +9,13 @@
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/DataScorpio.AspNetCore.Tests/DataScorpio.AspNetCore.Tests.csproj" />
+    <Project Path="tests/DataScorpio.DynaBee.Tests/DataScorpio.DynaBee.Tests.csproj" />
     <Project Path="tests/DataScorpio.EntityFrameworkCore.Tests/DataScorpio.EntityFrameworkCore.Tests.csproj" />
     <Project Path="tests/DataScorpio.Testing.Tests/DataScorpio.Testing.Tests.csproj" />
     <Project Path="tests/DataScorpio.Tests/DataScorpio.Tests.csproj" />
     <Project Path="tests/DataScorpio.TurtlePath.Tests/DataScorpio.TurtlePath.Tests.csproj" />
   </Folder>
+  <Project Path="../dynabee/src/DynaBee/DynaBee.csproj" />
   <Project Path="../turtlepath/src/TurtlePath.Abstractions/TurtlePath.Abstractions.csproj" />
   <Project Path="../turtlepath/src/TurtlePath.Domain/TurtlePath.Domain.csproj" />
 </Solution>
