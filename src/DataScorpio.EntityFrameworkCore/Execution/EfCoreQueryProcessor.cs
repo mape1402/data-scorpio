@@ -37,6 +37,7 @@ public sealed class EfCoreQueryProcessor : IEfCoreQueryProcessor
         IQueryable<TEntity> source,
         QueryRequest request,
         CancellationToken cancellationToken = default)
+        where TEntity : class
         => ExecuteAsync(source, request, profiles.GetProfile<TEntity>(), cancellationToken);
 
     /// <inheritdoc/>
@@ -44,6 +45,7 @@ public sealed class EfCoreQueryProcessor : IEfCoreQueryProcessor
         IQueryable<TEntity> source,
         QueryDescriptor descriptor,
         CancellationToken cancellationToken = default)
+        where TEntity : class
         => ExecuteAsync(source, descriptor, profiles.GetProfile<TEntity>(), cancellationToken);
 
     /// <inheritdoc/>
@@ -52,6 +54,7 @@ public sealed class EfCoreQueryProcessor : IEfCoreQueryProcessor
         QueryRequest request,
         QueryProfileDefinition profile,
         CancellationToken cancellationToken = default)
+        where TEntity : class
     {
         if (source == null)
             throw new ArgumentNullException(nameof(source));
@@ -72,6 +75,7 @@ public sealed class EfCoreQueryProcessor : IEfCoreQueryProcessor
         QueryDescriptor descriptor,
         QueryProfileDefinition profile,
         CancellationToken cancellationToken = default)
+        where TEntity : class
     {
         if (source == null)
             throw new ArgumentNullException(nameof(source));
@@ -93,7 +97,8 @@ public sealed class EfCoreQueryProcessor : IEfCoreQueryProcessor
         var pageCount = CalculatePageCount(rowCount, descriptor.Page.PageSize);
         var pageNumber = CalculatePageNumber(descriptor.Page.PageNumber, pageCount);
         var pageSize = descriptor.Page.PageSize ?? Convert.ToInt32(rowCount);
-        var items = await applier.Apply(source, descriptor, profile).ToListAsync(cancellationToken);
+        var items = await ApplyIncludes(applier.Apply(source, descriptor, profile), descriptor, profile)
+            .ToListAsync(cancellationToken);
 
         return QueryExecutionResult<TEntity>.Success(new QueryResult<TEntity>
         {
@@ -103,6 +108,23 @@ public sealed class EfCoreQueryProcessor : IEfCoreQueryProcessor
             RowCount = rowCount,
             PageCount = pageCount
         });
+    }
+
+    private static IQueryable<TEntity> ApplyIncludes<TEntity>(
+        IQueryable<TEntity> source,
+        QueryDescriptor descriptor,
+        QueryProfileDefinition profile)
+        where TEntity : class
+    {
+        foreach (var include in descriptor.Includes)
+        {
+            var definition = profile.FindInclude(include.Name);
+
+            if (definition != null)
+                source = source.Include(definition.MemberPath);
+        }
+
+        return source;
     }
 
     private static int CalculatePageCount(long rowCount, int? pageSize)

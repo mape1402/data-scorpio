@@ -39,6 +39,7 @@ public sealed class QueryDescriptorValidatorTests
                 Term = "ada",
                 Fields = ["name"]
             },
+            Includes = [new IncludeDescriptor { Name = "orders" }],
             Page = new PageDescriptor
             {
                 PageNumber = 1,
@@ -142,6 +143,20 @@ public sealed class QueryDescriptorValidatorTests
     }
 
     [Fact]
+    public void Validate_rejects_unknown_include()
+    {
+        var descriptor = new QueryDescriptor
+        {
+            Includes = [new IncludeDescriptor { Name = "passwords" }]
+        };
+
+        var error = Assert.Single(validator.Validate(descriptor, profile).Errors);
+
+        Assert.Equal(QueryValidationCodes.UnknownInclude, error.Code);
+        Assert.Equal("passwords", error.Field);
+    }
+
+    [Fact]
     public void Validate_rejects_invalid_paging()
     {
         var descriptor = new QueryDescriptor
@@ -194,6 +209,7 @@ public sealed class QueryDescriptorValidatorTests
                 .AllowSearch("name", customer => customer.Name)
                 .AllowFilter("status", customer => customer.Status)
                 .AllowSort("created", customer => customer.CreatedAt)
+                .AllowInclude("orders", customer => customer.Orders)
                 .MaxPageSize(100);
         }
     }
@@ -205,5 +221,12 @@ public sealed class QueryDescriptorValidatorTests
         public string Status { get; init; }
 
         public DateTime CreatedAt { get; init; }
+
+        public IReadOnlyCollection<Order> Orders { get; init; } = Array.Empty<Order>();
+    }
+
+    private sealed class Order
+    {
+        public string Number { get; init; }
     }
 }

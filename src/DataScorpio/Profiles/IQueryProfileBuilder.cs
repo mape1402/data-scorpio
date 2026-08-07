@@ -55,6 +55,21 @@ public interface IQueryProfileBuilder<TEntity>
     IQueryProfileBuilder<TEntity> AllowSearch(string name, Expression<Func<TEntity, object>> field);
 
     /// <summary>
+    /// Allows including a navigation path using the member name as the public include name.
+    /// </summary>
+    /// <param name="include">The include expression.</param>
+    /// <returns>The same builder.</returns>
+    IQueryProfileBuilder<TEntity> AllowInclude(Expression<Func<TEntity, object>> include);
+
+    /// <summary>
+    /// Allows including a navigation path using a public alias.
+    /// </summary>
+    /// <param name="name">The public include name or alias.</param>
+    /// <param name="include">The include expression.</param>
+    /// <returns>The same builder.</returns>
+    IQueryProfileBuilder<TEntity> AllowInclude(string name, Expression<Func<TEntity, object>> include);
+
+    /// <summary>
     /// Sets the default sort using the member name as the public query name.
     /// </summary>
     /// <param name="field">The field expression.</param>

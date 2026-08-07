@@ -22,6 +22,7 @@ public sealed class QueryDescriptorValidator : IQueryDescriptorValidator
         ValidateFilters(descriptor, profile, errors);
         ValidateSorts(descriptor, profile, errors);
         ValidateSearch(descriptor, profile, errors);
+        ValidateIncludes(descriptor, profile, errors);
         ValidatePage(descriptor, profile, errors);
 
         return errors.Count == 0
@@ -138,6 +139,25 @@ public sealed class QueryDescriptorValidator : IQueryDescriptorValidator
                     descriptor.Search.Term,
                     $"The field '{fieldName}' cannot be searched."));
             }
+        }
+    }
+
+    private static void ValidateIncludes(
+        QueryDescriptor descriptor,
+        QueryProfileDefinition profile,
+        ICollection<QueryValidationError> errors)
+    {
+        foreach (var include in descriptor.Includes)
+        {
+            if (profile.FindInclude(include.Name) != null)
+                continue;
+
+            errors.Add(Error(
+                QueryValidationCodes.UnknownInclude,
+                include.Name,
+                null,
+                null,
+                $"The include '{include.Name}' is not queryable."));
         }
     }
 

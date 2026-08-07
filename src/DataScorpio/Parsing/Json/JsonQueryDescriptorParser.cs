@@ -29,6 +29,7 @@ public sealed class JsonQueryDescriptorParser : IJsonQueryDescriptorParser
             FilterGroups = BuildFilterGroups(model),
             Sorts = BuildSorts(model.Sorts),
             Search = BuildSearch(model.Search),
+            Includes = BuildIncludes(model.Includes),
             Page = BuildPage(model.Page),
             Presets = BuildPresets(model.Presets)
         };
@@ -84,6 +85,21 @@ public sealed class JsonQueryDescriptorParser : IJsonQueryDescriptorParser
             {
                 Term = search.Term,
                 Fields = search.Fields ?? Array.Empty<string>()
+            };
+
+    private static IReadOnlyList<IncludeDescriptor> BuildIncludes(IReadOnlyList<JsonElement> includes)
+        => includes == null
+            ? Array.Empty<IncludeDescriptor>()
+            : includes.Select(BuildInclude).ToArray();
+
+    private static IncludeDescriptor BuildInclude(JsonElement include)
+        => include.ValueKind == JsonValueKind.String
+            ? new IncludeDescriptor { Name = include.GetString() }
+            : new IncludeDescriptor
+            {
+                Name = include.TryGetProperty("name", out var name)
+                    ? name.GetString()
+                    : null
             };
 
     private static PageDescriptor BuildPage(JsonPage page)
@@ -146,6 +162,8 @@ public sealed class JsonQueryDescriptorParser : IJsonQueryDescriptorParser
         public IReadOnlyList<JsonSort> Sorts { get; init; }
 
         public JsonSearch Search { get; init; }
+
+        public IReadOnlyList<JsonElement> Includes { get; init; }
 
         public JsonPage Page { get; init; }
 

@@ -21,6 +21,11 @@ public sealed class QueryDescriptor
     public SearchDescriptor Search { get; init; } = SearchDescriptor.Empty;
 
     /// <summary>
+    /// Gets the include descriptors to apply in provider adapters.
+    /// </summary>
+    public IReadOnlyList<IncludeDescriptor> Includes { get; init; } = Array.Empty<IncludeDescriptor>();
+
+    /// <summary>
     /// Gets the page descriptor.
     /// </summary>
     public PageDescriptor Page { get; init; } = PageDescriptor.Unpaged;

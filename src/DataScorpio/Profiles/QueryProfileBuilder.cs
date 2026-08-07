@@ -11,6 +11,7 @@ using DataScorpio.Querying;
 public sealed class QueryProfileBuilder<TEntity> : IQueryProfileBuilder<TEntity>
 {
     private readonly Dictionary<string, QueryFieldDefinition> fields = new(StringComparer.OrdinalIgnoreCase);
+    private readonly Dictionary<string, QueryIncludeDefinition> includes = new(StringComparer.OrdinalIgnoreCase);
     private QuerySortDefinition defaultSort;
     private int? maxPageSize;
 
@@ -37,6 +38,28 @@ public sealed class QueryProfileBuilder<TEntity> : IQueryProfileBuilder<TEntity>
     /// <inheritdoc/>
     public IQueryProfileBuilder<TEntity> AllowSearch(string name, Expression<Func<TEntity, object>> field)
         => Allow(name, field, QueryFieldCapabilities.Search);
+
+    /// <inheritdoc/>
+    public IQueryProfileBuilder<TEntity> AllowInclude(Expression<Func<TEntity, object>> include)
+        => AllowInclude(GetDefaultName(include), include);
+
+    /// <inheritdoc/>
+    public IQueryProfileBuilder<TEntity> AllowInclude(string name, Expression<Func<TEntity, object>> include)
+    {
+        if (include == null)
+            throw new ArgumentNullException(nameof(include));
+
+        var normalizedName = NormalizeName(name);
+        var member = QueryMemberPath.From(include);
+
+        if (includes.TryGetValue(normalizedName, out var existing) &&
+            !string.Equals(existing.MemberPath, member.Path, StringComparison.Ordinal))
+            throw new InvalidOperationException($"Query include '{normalizedName}' is already mapped to '{existing.MemberPath}'.");
+
+        includes[normalizedName] = new QueryIncludeDefinition(normalizedName, member.Path);
+
+        return this;
+    }
 
     /// <inheritdoc/>
     public IQueryProfileBuilder<TEntity> DefaultSort(
@@ -75,6 +98,7 @@ public sealed class QueryProfileBuilder<TEntity> : IQueryProfileBuilder<TEntity>
         => new(
             typeof(TEntity),
             new ReadOnlyDictionary<string, QueryFieldDefinition>(new Dictionary<string, QueryFieldDefinition>(fields, fields.Comparer)),
+            new ReadOnlyDictionary<string, QueryIncludeDefinition>(new Dictionary<string, QueryIncludeDefinition>(includes, includes.Comparer)),
             defaultSort,
             maxPageSize);
 

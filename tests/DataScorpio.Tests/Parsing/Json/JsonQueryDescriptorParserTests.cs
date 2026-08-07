@@ -20,6 +20,7 @@ public sealed class JsonQueryDescriptorParserTests
             { "field": "CreatedAt", "direction": "desc" }
           ],
           "search": { "term": "ada", "fields": [ "Name", "Email" ] },
+          "includes": [ "orders" ],
           "page": { "pageNumber": 2, "pageSize": 25 },
           "presets": [
             { "name": "tenant", "arguments": { "tenantId": 42 } }
@@ -48,6 +49,7 @@ public sealed class JsonQueryDescriptorParserTests
         Assert.Equal(SortDirection.Descending, sort.Direction);
         Assert.Equal("ada", descriptor.Search.Term);
         Assert.Equal(["Name", "Email"], descriptor.Search.Fields);
+        Assert.Equal("orders", Assert.Single(descriptor.Includes).Name);
         Assert.Equal(2, descriptor.Page.PageNumber);
         Assert.Equal(25, descriptor.Page.PageSize);
 

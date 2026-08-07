@@ -47,6 +47,17 @@ public sealed class QueryProfileBuilderTests
     }
 
     [Fact]
+    public void Profile_captures_include_aliases()
+    {
+        var definition = new CustomerQueryProfile().BuildDefinition();
+
+        var include = definition.FindInclude("orders");
+
+        Assert.NotNull(include);
+        Assert.Equal("Orders", include.MemberPath);
+    }
+
+    [Fact]
     public void Builder_rejects_non_member_expressions()
     {
         var builder = new QueryProfileBuilder<Customer>();
@@ -88,6 +99,7 @@ public sealed class QueryProfileBuilderTests
                 .AllowSearch("customerName", customer => customer.Name)
                 .AllowFilter("email", customer => customer.Email)
                 .AllowFilter("city", customer => customer.Address.City)
+                .AllowInclude("orders", customer => customer.Orders)
                 .DefaultSort("created", customer => customer.CreatedAt, SortDirection.Descending)
                 .MaxPageSize(100);
         }
@@ -102,10 +114,17 @@ public sealed class QueryProfileBuilderTests
         public DateTime CreatedAt { get; init; }
 
         public Address Address { get; init; } = new();
+
+        public IReadOnlyCollection<Order> Orders { get; init; } = Array.Empty<Order>();
     }
 
     private sealed class Address
     {
         public string City { get; init; }
+    }
+
+    private sealed class Order
+    {
+        public string Number { get; init; }
     }
 }

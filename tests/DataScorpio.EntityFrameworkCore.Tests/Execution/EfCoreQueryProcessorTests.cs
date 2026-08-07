@@ -78,6 +78,41 @@ public sealed class EfCoreQueryProcessorTests
         Assert.Equal("Ada", Assert.Single(result.Result.Items).Name);
     }
 
+    [Fact]
+    public async Task ExecuteAsync_applies_configured_includes()
+    {
+        await using var db = CreateDb();
+        var processor = CreateProcessor();
+        var descriptor = new QueryDescriptor
+        {
+            Includes = [new IncludeDescriptor { Name = "orders" }],
+            Sorts = [new SortDescriptor { Field = "CreatedAt", Direction = SortDirection.Descending }],
+            Page = new PageDescriptor { PageNumber = 1, PageSize = 1 }
+        };
+
+        var result = await processor.ExecuteAsync(db.Customers.AsNoTracking(), descriptor);
+
+        var customer = Assert.Single(result.Result.Items);
+        Assert.Equal("Ada", customer.Name);
+        Assert.NotEmpty(customer.Orders);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_rejects_unknown_includes()
+    {
+        await using var db = CreateDb();
+        var processor = CreateProcessor();
+        var descriptor = new QueryDescriptor
+        {
+            Includes = [new IncludeDescriptor { Name = "passwords" }]
+        };
+
+        var result = await processor.ExecuteAsync(db.Customers.AsNoTracking(), descriptor);
+
+        Assert.False(result.IsSuccess);
+        Assert.Contains(result.Validation.Errors, error => error.Code == QueryValidationCodes.UnknownInclude);
+    }
+
     private static EfCoreQueryProcessor CreateProcessor()
     {
         var registry = new QueryProfileRegistryBuilder()
@@ -100,7 +135,13 @@ public sealed class EfCoreQueryProcessorTests
         var db = new CustomerDbContext(options);
 
         db.Customers.AddRange(
-            new Customer { Name = "Ada", Status = "Active", CreatedAt = new DateTime(2026, 1, 3) },
+            new Customer
+            {
+                Name = "Ada",
+                Status = "Active",
+                CreatedAt = new DateTime(2026, 1, 3),
+                Orders = [new Order { Number = "A-001" }]
+            },
             new Customer { Name = "Grace", Status = "Active", CreatedAt = new DateTime(2026, 1, 1) },
             new Customer { Name = "Alan", Status = "Inactive", CreatedAt = new DateTime(2026, 1, 2) });
         db.SaveChanges();
@@ -116,6 +157,7 @@ public sealed class EfCoreQueryProcessorTests
                 .AllowFilter(customer => customer.Name)
                 .AllowFilter(customer => customer.Status)
                 .AllowSort(customer => customer.CreatedAt)
+                .AllowInclude("orders", customer => customer.Orders)
                 .MaxPageSize(25);
         }
     }
@@ -138,5 +180,14 @@ public sealed class EfCoreQueryProcessorTests
         public string Status { get; init; }
 
         public DateTime CreatedAt { get; init; }
+
+        public List<Order> Orders { get; init; } = [];
+    }
+
+    private sealed class Order
+    {
+        public int Id { get; init; }
+
+        public string Number { get; init; }
     }
 }

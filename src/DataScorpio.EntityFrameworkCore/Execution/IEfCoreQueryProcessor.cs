@@ -20,7 +20,8 @@ public interface IEfCoreQueryProcessor
     Task<QueryExecutionResult<TEntity>> ExecuteAsync<TEntity>(
         IQueryable<TEntity> source,
         QueryRequest request,
-        CancellationToken cancellationToken = default);
+        CancellationToken cancellationToken = default)
+        where TEntity : class;
 
     /// <summary>
     /// Executes a parsed query descriptor using a registered profile.
@@ -33,7 +34,8 @@ public interface IEfCoreQueryProcessor
     Task<QueryExecutionResult<TEntity>> ExecuteAsync<TEntity>(
         IQueryable<TEntity> source,
         QueryDescriptor descriptor,
-        CancellationToken cancellationToken = default);
+        CancellationToken cancellationToken = default)
+        where TEntity : class;
 
     /// <summary>
     /// Executes a query using an explicit profile.
@@ -48,7 +50,8 @@ public interface IEfCoreQueryProcessor
         IQueryable<TEntity> source,
         QueryRequest request,
         QueryProfileDefinition profile,
-        CancellationToken cancellationToken = default);
+        CancellationToken cancellationToken = default)
+        where TEntity : class;
 
     /// <summary>
     /// Executes a parsed query descriptor using an explicit profile.
@@ -63,5 +66,6 @@ public interface IEfCoreQueryProcessor
         IQueryable<TEntity> source,
         QueryDescriptor descriptor,
         QueryProfileDefinition profile,
-        CancellationToken cancellationToken = default);
+        CancellationToken cancellationToken = default)
+        where TEntity : class;
 }

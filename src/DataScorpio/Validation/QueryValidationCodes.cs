@@ -26,6 +26,11 @@ public static class QueryValidationCodes
     public const string FieldNotSearchable = "query.field_not_searchable";
 
     /// <summary>
+    /// The requested include is not configured.
+    /// </summary>
+    public const string UnknownInclude = "query.unknown_include";
+
+    /// <summary>
     /// The requested operator is missing.
     /// </summary>
     public const string MissingOperator = "query.missing_operator";
