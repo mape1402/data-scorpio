@@ -102,6 +102,19 @@ public sealed class QueryableQueryApplierTests
     }
 
     [Fact]
+    public void Apply_searches_configured_search_fields()
+    {
+        var descriptor = new QueryDescriptor
+        {
+            Search = new SearchDescriptor { Term = "NAVY" }
+        };
+
+        var result = Assert.Single(Apply(descriptor));
+
+        Assert.Equal("Grace", result.Name);
+    }
+
+    [Fact]
     public void Apply_supports_comparison_operators()
     {
         var descriptor = parser.Parse(new QueryRequest
@@ -154,7 +167,9 @@ public sealed class QueryableQueryApplierTests
             builder
                 .AllowFilter(customer => customer.Name)
                 .AllowSort(customer => customer.Name)
+                .AllowSearch(customer => customer.Name)
                 .AllowFilter(customer => customer.Email)
+                .AllowSearch(customer => customer.Email)
                 .AllowFilter(customer => customer.Status)
                 .AllowSort(customer => customer.Status)
                 .AllowFilter(customer => customer.DeletedAt)

@@ -27,10 +27,54 @@ public sealed class QueryableQueryApplier : IQueryableQueryApplier
             throw new ArgumentNullException(nameof(profile));
 
         source = ApplyFilters(source, descriptor, profile);
+        source = ApplySearch(source, descriptor, profile);
         source = ApplySorts(source, descriptor, profile);
         source = ApplyPaging(source, descriptor);
 
         return source;
+    }
+
+    private static IQueryable<TEntity> ApplySearch<TEntity>(
+        IQueryable<TEntity> source,
+        QueryDescriptor descriptor,
+        QueryProfileDefinition profile)
+    {
+        if (string.IsNullOrWhiteSpace(descriptor.Search.Term))
+            return source;
+
+        var searchFields = descriptor.Search.Fields.Count > 0
+            ? descriptor.Search.Fields
+            : profile.Fields.Values
+                .Where(field => field.CanSearch)
+                .Select(field => field.Name)
+                .ToArray();
+
+        if (searchFields.Count == 0)
+            return source;
+
+        var parameter = Expression.Parameter(typeof(TEntity), "entity");
+        Expression body = null;
+        var term = QueryValue.From(descriptor.Search.Term);
+
+        foreach (var fieldName in searchFields)
+        {
+            var field = profile.FindField(fieldName);
+
+            if (field == null)
+                throw new InvalidOperationException($"Field '{fieldName}' is not configured.");
+
+            var member = BuildMemberAccess(parameter, field.MemberPath);
+            var searchBody = StringCompare(member, term, SieveOperatorNames.ContainsInsensitive);
+
+            body = body == null
+                ? searchBody
+                : Expression.OrElse(body, searchBody);
+        }
+
+        if (body == null)
+            return source;
+
+        return source.Where(Expression.Lambda<Func<TEntity, bool>>(body, parameter));
     }
 
     private static IQueryable<TEntity> ApplyFilters<TEntity>(
