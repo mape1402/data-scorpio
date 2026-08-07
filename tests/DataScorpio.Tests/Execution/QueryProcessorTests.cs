@@ -59,6 +59,38 @@ public sealed class QueryProcessorTests
         Assert.Equal("Ada", Assert.Single(result.Result.Items).Name);
     }
 
+    [Fact]
+    public void Execute_accepts_native_descriptor_without_parsing_strings()
+    {
+        var processor = CreateProcessor();
+        var descriptor = new QueryDescriptor
+        {
+            FilterGroups =
+            [
+                new FilterGroupDescriptor
+                {
+                    Filters =
+                    [
+                        new FilterDescriptor
+                        {
+                            Field = "Status",
+                            Operator = "equals",
+                            Value = QueryValue.From("Active")
+                        }
+                    ]
+                }
+            ],
+            Sorts = [new SortDescriptor { Field = "Name" }],
+            Page = new PageDescriptor { PageNumber = 1, PageSize = 2 }
+        };
+
+        var result = processor.Execute(Customers().AsQueryable(), descriptor);
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal(2, result.Result.RowCount);
+        Assert.Equal(["Ada", "Grace"], result.Result.Items.Select(customer => customer.Name));
+    }
+
     private static QueryProcessor CreateProcessor()
     {
         var profile = new CustomerQueryProfile().BuildDefinition();

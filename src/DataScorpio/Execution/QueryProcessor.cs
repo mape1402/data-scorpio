@@ -43,6 +43,12 @@ public sealed class QueryProcessor : IQueryProcessor
     /// <inheritdoc/>
     public QueryExecutionResult<TEntity> Execute<TEntity>(
         IQueryable<TEntity> source,
+        QueryDescriptor descriptor)
+        => Execute(source, descriptor, profiles.GetProfile<TEntity>());
+
+    /// <inheritdoc/>
+    public QueryExecutionResult<TEntity> Execute<TEntity>(
+        IQueryable<TEntity> source,
         QueryRequest request,
         QueryProfileDefinition profile)
     {
@@ -56,6 +62,24 @@ public sealed class QueryProcessor : IQueryProcessor
             throw new ArgumentNullException(nameof(profile));
 
         var descriptor = parser.Parse(request);
+        return Execute(source, descriptor, profile);
+    }
+
+    /// <inheritdoc/>
+    public QueryExecutionResult<TEntity> Execute<TEntity>(
+        IQueryable<TEntity> source,
+        QueryDescriptor descriptor,
+        QueryProfileDefinition profile)
+    {
+        if (source == null)
+            throw new ArgumentNullException(nameof(source));
+
+        if (descriptor == null)
+            throw new ArgumentNullException(nameof(descriptor));
+
+        if (profile == null)
+            throw new ArgumentNullException(nameof(profile));
+
         var validation = validator.Validate(descriptor, profile);
 
         if (!validation.IsValid)

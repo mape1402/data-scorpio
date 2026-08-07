@@ -45,6 +45,39 @@ public sealed class EfCoreQueryProcessorTests
         Assert.Contains(result.Validation.Errors, error => error.Code == QueryValidationCodes.UnknownField);
     }
 
+    [Fact]
+    public async Task ExecuteAsync_accepts_native_descriptor_without_parsing_strings()
+    {
+        await using var db = CreateDb();
+        var processor = CreateProcessor();
+        var descriptor = new QueryDescriptor
+        {
+            FilterGroups =
+            [
+                new FilterGroupDescriptor
+                {
+                    Filters =
+                    [
+                        new FilterDescriptor
+                        {
+                            Field = "Status",
+                            Operator = "equals",
+                            Value = QueryValue.From("Active")
+                        }
+                    ]
+                }
+            ],
+            Sorts = [new SortDescriptor { Field = "CreatedAt", Direction = SortDirection.Descending }],
+            Page = new PageDescriptor { PageNumber = 1, PageSize = 1 }
+        };
+
+        var result = await processor.ExecuteAsync(db.Customers.AsNoTracking(), descriptor);
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal(2, result.Result.RowCount);
+        Assert.Equal("Ada", Assert.Single(result.Result.Items).Name);
+    }
+
     private static EfCoreQueryProcessor CreateProcessor()
     {
         var registry = new QueryProfileRegistryBuilder()

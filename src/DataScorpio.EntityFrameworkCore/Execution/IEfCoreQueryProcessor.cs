@@ -23,6 +23,19 @@ public interface IEfCoreQueryProcessor
         CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Executes a parsed query descriptor using a registered profile.
+    /// </summary>
+    /// <typeparam name="TEntity">The entity type.</typeparam>
+    /// <param name="source">The source query.</param>
+    /// <param name="descriptor">The parsed query descriptor.</param>
+    /// <param name="cancellationToken">The cancellation token.</param>
+    /// <returns>The execution result.</returns>
+    Task<QueryExecutionResult<TEntity>> ExecuteAsync<TEntity>(
+        IQueryable<TEntity> source,
+        QueryDescriptor descriptor,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Executes a query using an explicit profile.
     /// </summary>
     /// <typeparam name="TEntity">The entity type.</typeparam>
@@ -34,6 +47,21 @@ public interface IEfCoreQueryProcessor
     Task<QueryExecutionResult<TEntity>> ExecuteAsync<TEntity>(
         IQueryable<TEntity> source,
         QueryRequest request,
+        QueryProfileDefinition profile,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Executes a parsed query descriptor using an explicit profile.
+    /// </summary>
+    /// <typeparam name="TEntity">The entity type.</typeparam>
+    /// <param name="source">The source query.</param>
+    /// <param name="descriptor">The parsed query descriptor.</param>
+    /// <param name="profile">The profile definition.</param>
+    /// <param name="cancellationToken">The cancellation token.</param>
+    /// <returns>The execution result.</returns>
+    Task<QueryExecutionResult<TEntity>> ExecuteAsync<TEntity>(
+        IQueryable<TEntity> source,
+        QueryDescriptor descriptor,
         QueryProfileDefinition profile,
         CancellationToken cancellationToken = default);
 }

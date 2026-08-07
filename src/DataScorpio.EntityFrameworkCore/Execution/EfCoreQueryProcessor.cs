@@ -40,6 +40,13 @@ public sealed class EfCoreQueryProcessor : IEfCoreQueryProcessor
         => ExecuteAsync(source, request, profiles.GetProfile<TEntity>(), cancellationToken);
 
     /// <inheritdoc/>
+    public Task<QueryExecutionResult<TEntity>> ExecuteAsync<TEntity>(
+        IQueryable<TEntity> source,
+        QueryDescriptor descriptor,
+        CancellationToken cancellationToken = default)
+        => ExecuteAsync(source, descriptor, profiles.GetProfile<TEntity>(), cancellationToken);
+
+    /// <inheritdoc/>
     public async Task<QueryExecutionResult<TEntity>> ExecuteAsync<TEntity>(
         IQueryable<TEntity> source,
         QueryRequest request,
@@ -56,6 +63,25 @@ public sealed class EfCoreQueryProcessor : IEfCoreQueryProcessor
             throw new ArgumentNullException(nameof(profile));
 
         var descriptor = parser.Parse(request);
+        return await ExecuteAsync(source, descriptor, profile, cancellationToken);
+    }
+
+    /// <inheritdoc/>
+    public async Task<QueryExecutionResult<TEntity>> ExecuteAsync<TEntity>(
+        IQueryable<TEntity> source,
+        QueryDescriptor descriptor,
+        QueryProfileDefinition profile,
+        CancellationToken cancellationToken = default)
+    {
+        if (source == null)
+            throw new ArgumentNullException(nameof(source));
+
+        if (descriptor == null)
+            throw new ArgumentNullException(nameof(descriptor));
+
+        if (profile == null)
+            throw new ArgumentNullException(nameof(profile));
+
         var validation = validator.Validate(descriptor, profile);
 
         if (!validation.IsValid)
