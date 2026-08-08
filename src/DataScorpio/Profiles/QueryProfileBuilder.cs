@@ -75,6 +75,20 @@ public sealed class QueryProfileBuilder<TEntity> : IQueryProfileBuilder<TEntity>
     }
 
     /// <inheritdoc/>
+    public IQueryProfileBuilder<TEntity> CustomFilter<TContract>(
+        string name,
+        Func<QueryValue, Expression<Func<TContract, bool>>> predicate)
+    {
+        if (predicate == null)
+            throw new ArgumentNullException(nameof(predicate));
+
+        EnsureContractApplies<TContract>();
+
+        return CustomFilter(name, (query, value) =>
+            query.Where(QueryContractExpressionAdapter.Adapt<TContract, TEntity>(predicate(value))));
+    }
+
+    /// <inheritdoc/>
     public IQueryProfileBuilder<TEntity> CustomFilterDescriptor(
         string name,
         Func<IQueryable<TEntity>, FilterDescriptor, IQueryable<TEntity>> filter)
@@ -106,6 +120,21 @@ public sealed class QueryProfileBuilder<TEntity> : IQueryProfileBuilder<TEntity>
             (source, direction) => sort((IQueryable<TEntity>)source, direction));
 
         return this;
+    }
+
+    /// <inheritdoc/>
+    public IQueryProfileBuilder<TEntity> CustomSort<TContract>(
+        string name,
+        Expression<Func<TContract, object>> keySelector)
+    {
+        if (keySelector == null)
+            throw new ArgumentNullException(nameof(keySelector));
+
+        EnsureContractApplies<TContract>();
+
+        var adaptedKeySelector = QueryContractExpressionAdapter.Adapt<TContract, TEntity>(keySelector);
+
+        return CustomSort(name, (query, direction) => ApplyContractSort(query, adaptedKeySelector, direction));
     }
 
     /// <inheritdoc/>
@@ -189,5 +218,46 @@ public sealed class QueryProfileBuilder<TEntity> : IQueryProfileBuilder<TEntity>
             throw new ArgumentException("Query field name cannot be empty.", nameof(name));
 
         return name.Trim();
+    }
+
+    private static void EnsureContractApplies<TContract>()
+    {
+        if (!typeof(TContract).IsAssignableFrom(typeof(TEntity)))
+            throw new InvalidOperationException(
+                $"Contract '{typeof(TContract).Name}' cannot be used for entity '{typeof(TEntity).Name}'.");
+    }
+
+    internal static IQueryable<TEntity> ApplyContractSort(
+        IQueryable<TEntity> source,
+        LambdaExpression keySelector,
+        SortDirection direction)
+    {
+        var body = UnwrapObjectConversion(keySelector.Body);
+        var delegateType = typeof(Func<,>).MakeGenericType(typeof(TEntity), body.Type);
+        var typedKeySelector = Expression.Lambda(delegateType, body, keySelector.Parameters);
+        var methodName = direction == SortDirection.Descending
+            ? nameof(Queryable.OrderByDescending)
+            : nameof(Queryable.OrderBy);
+
+        var method = typeof(Queryable)
+            .GetMethods()
+            .Single(method =>
+                method.Name == methodName &&
+                method.GetParameters().Length == 2)
+            .MakeGenericMethod(typeof(TEntity), body.Type);
+
+        return (IQueryable<TEntity>)method.Invoke(null, [source, typedKeySelector]);
+    }
+
+    private static Expression UnwrapObjectConversion(Expression expression)
+    {
+        while (expression is UnaryExpression unary &&
+               (unary.NodeType == ExpressionType.Convert || unary.NodeType == ExpressionType.ConvertChecked) &&
+               unary.Type == typeof(object))
+        {
+            expression = unary.Operand;
+        }
+
+        return expression;
     }
 }

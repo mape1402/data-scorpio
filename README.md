@@ -250,6 +250,38 @@ var result = processor.Execute(customers.AsQueryable(), new QueryRequest
 Custom filters and sorts receive `IQueryable<T>`, so they can stay provider-friendly when you write provider-translatable LINQ.
 Use `CustomFilterDescriptor` when the custom filter needs the full operator/value descriptor.
 
+Reusable custom filters and sorts can target a base class or interface contract:
+
+```csharp
+public interface ITenantScoped
+{
+    string TenantId { get; }
+}
+
+public interface ICreated
+{
+    DateTime CreatedAt { get; }
+}
+
+builder
+    .CustomFilter<ITenantScoped>("ForTenant", value =>
+        entity => entity.TenantId == Convert.ToString(value.Value))
+    .CustomSort<ICreated>("RecentlyCreated", entity => entity.CreatedAt);
+```
+
+Any profile whose entity implements that contract can use the same custom query name.
+
+You can also register contract custom queries once for every matching profile:
+
+```csharp
+services.AddDataScorpio(profiles => profiles
+    .AddProfile<CustomerQueryProfile>()
+    .AddProfile<OrderQueryProfile>()
+    .CustomFilter<ITenantScoped>("ForTenant", value =>
+        entity => entity.TenantId == Convert.ToString(value.Value))
+    .CustomSort<ICreated>("RecentlyCreated", entity => entity.CreatedAt));
+```
+
 ## ASP.NET Core
 
 Install:
