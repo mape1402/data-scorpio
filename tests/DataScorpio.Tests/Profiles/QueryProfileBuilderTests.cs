@@ -67,9 +67,14 @@ public sealed class QueryProfileBuilderTests
     }
 
     [Fact]
-    public void Profile_applies_convention_sets()
+    public void Registry_builder_applies_convention_sets_to_matching_profiles()
     {
-        var definition = new CustomerConventionProfile().BuildDefinition();
+        var registry = new QueryProfileRegistryBuilder()
+            .AddConventions<CustomerQueryConventions>()
+            .AddProfile<CustomerQueryProfile>()
+            .Build();
+
+        var definition = registry.GetProfile<Customer>();
 
         Assert.NotNull(definition.FindCustomFilter("hasEmail"));
         Assert.NotNull(definition.FindCustomSort("byCreated"));
@@ -136,14 +141,6 @@ public sealed class QueryProfileBuilderTests
                     : query.OrderBy(customer => customer.CreatedAt))
                 .DefaultSort("created", customer => customer.CreatedAt, SortDirection.Descending)
                 .MaxPageSize(100);
-        }
-    }
-
-    private sealed class CustomerConventionProfile : QueryProfile<Customer>
-    {
-        public override void Configure(IQueryProfileBuilder<Customer> builder)
-        {
-            builder.Use<CustomerQueryConventions>();
         }
     }
 
