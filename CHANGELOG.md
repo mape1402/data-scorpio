@@ -5,26 +5,31 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
----
-
-## [Unreleased]
-
-## [v1.0.0] - 2026-08-08
+## [1.0.0] - 2026-08-08
 
 ### Added
 
-- Initial repository structure copied from the OctoMap working setup.
-- GitHub CI and NuGet release workflow scaffolding.
-- Shared build metadata, package settings, documentation placeholders, and standard source, test, benchmark, and sample folders.
-- Core query request, descriptor, result, validation, and diagnostic models.
-- Typed query profile metadata with field allowlists, aliases, default sort, and max page size.
-- Sieve-compatible filter and sort parser with OR groups, escaping, null handling, and documented operator coverage.
-- Native JSON descriptor parser for JSON-first query payloads.
-- Query descriptor validation against profile metadata.
-- `IQueryable` descriptor applier for filters, sorts, default sort, and paging.
-- Configured multi-field search execution.
-- Allowlisted include metadata, validation, and JSON parsing.
-- End-to-end query processor and dependency injection registration.
-- DataScorpio testing helper package.
-- SQLite-backed testing helper package.
-- TurtlePath integration direction documented as TurtlePath-owned, with DataScorpio exposing reusable core APIs.
+- Initial `DataScorpio` core package.
+- String-first `QueryRequest` model for filters, sorts, search, page number, and page size.
+- Native `QueryDescriptor` model for structured query execution.
+- Sieve-compatible filter and sort string parser.
+- Filter operators for equality, inequality, comparisons, contains, starts with, ends with, and their supported case-insensitive or negated variants.
+- OR field groups and OR value groups in string filters.
+- Explicit null handling in string filters and native JSON descriptors.
+- Native JSON descriptor parser for filters, filter groups, sorts, search, includes, paging, and presets.
+- Typed `QueryProfile<TEntity>` configuration with filter, sort, search, include, alias, default sort, and max page size support.
+- Custom filters and custom sorts over `IQueryable<T>`.
+- Contract-based reusable custom filters and custom sorts through query convention sets.
+- Query descriptor validation with structured diagnostics for unknown fields, unsupported operations, includes, and paging errors.
+- Provider-friendly `IQueryable<T>` query application for filtering, sorting, search, paging, and total row counts.
+- `IQueryProcessor` execution pipeline with success and rejected result models.
+- `QueryResult<T>` paging metadata with `Items`, `Results`, `PageNumber`, `CurrentPage`, `PageSize`, `RowCount`, `TotalRows`, `PageCount`, `TotalPages`, `HasPreviousPage`, and `HasNextPage`.
+- Dependency injection registration through `AddDataScorpio(...)`.
+- Compatibility registration through `AddDataScorpioSieveCompatibility(...)`.
+- `DataScorpio.Testing` package with in-memory query testing helpers.
+- `QueryTestHost<TEntity>` for lightweight profile tests.
+- `IDataScorpioTesting<TEntity>` with async seeding and query execution helpers.
+- Query assertions for success, rejection, validation codes, filtering, sorting, and paging.
+- `DataScorpio.Testing.Sqlite` package for SQLite-backed provider behavior tests.
+- Expanded basic sample covering filtering, sorting, paging, search, OR filters, aliases, custom conventions, null filters, native JSON, and validation.
+- GitHub CI workflow, NuGet release workflow, shared build metadata, test projects, sample project, and repository documentation.
