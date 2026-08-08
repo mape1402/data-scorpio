@@ -22,6 +22,7 @@
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/mape1402/data-scorpio</PackageProjectUrl>
     <PackageIcon>image.png</PackageIcon>
+    <PackageTags>query;filtering;sorting;paging;search;iqueryable;sieve;testing;sqlite</PackageTags>
     <PackageReleaseNotes>https://github.com/mape1402/data-scorpio/releases</PackageReleaseNotes>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
