@@ -17,7 +17,6 @@ dotnet add package DataScorpio
 Optional packages:
 
 ```bash
-dotnet add package DataScorpio.AspNetCore
 dotnet add package DataScorpio.Testing
 ```
 
@@ -279,16 +278,9 @@ builder
 
 ## ASP.NET Core
 
-Install:
-
-```bash
-dotnet add package DataScorpio.AspNetCore
-```
-
-Convert `HttpContext.Request.Query` into a `QueryRequest`:
-
 ```csharp
-using DataScorpio.AspNetCore.QueryRequestBinding;
+using DataScorpio.Execution;
+using DataScorpio.Querying;
 
 app.MapGet("/customers", async (
     HttpContext http,
@@ -296,7 +288,15 @@ app.MapGet("/customers", async (
     IQueryProcessor processor,
     CancellationToken cancellationToken) =>
 {
-    var request = http.Request.Query.ToDataScorpioQueryRequest();
+    var request = new QueryRequest
+    {
+        Filters = http.Request.Query["filters"],
+        Sorts = http.Request.Query["sorts"],
+        Search = http.Request.Query["search"],
+        PageNumber = int.TryParse(http.Request.Query["pageNumber"], out var pageNumber) ? pageNumber : null,
+        PageSize = int.TryParse(http.Request.Query["pageSize"], out var pageSize) ? pageSize : null
+    };
+
     var result = processor.Execute(db.Customers.AsNoTracking(), request);
 
     return result.IsSuccess
@@ -360,7 +360,6 @@ Registration methods:
 | --- | --- |
 | `services.AddDataScorpio(...)` | `DataScorpio` |
 | `services.AddDataScorpioSieveCompatibility(...)` | `DataScorpio` |
-| `query.ToDataScorpioQueryRequest()` | `DataScorpio.AspNetCore` |
 
 ## Sample
 
