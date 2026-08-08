@@ -23,9 +23,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Query descriptor validation against profile metadata.
 - `IQueryable` descriptor applier for filters, sorts, default sort, and paging.
 - Configured multi-field search execution.
-- Allowlisted include metadata, validation, JSON parsing, and EF Core execution.
+- Allowlisted include metadata, validation, and JSON parsing.
 - End-to-end query processor and dependency injection registration.
-- Entity Framework Core async query processor package.
 - ASP.NET Core query collection binding package.
 - DataScorpio testing helper package.
 - TurtlePath integration direction documented as TurtlePath-owned, with DataScorpio exposing reusable core APIs.
