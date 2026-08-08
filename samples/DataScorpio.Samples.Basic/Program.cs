@@ -12,11 +12,7 @@ internal static class Program
     {
         var customers = SeedCustomers().AsQueryable();
         using var services = new ServiceCollection()
-            .AddDataScorpio(profiles => profiles
-                .AddProfile<CustomerQueryProfile>()
-                .CustomFilter<IRegional>("InRegion", value =>
-                    customer => customer.Region == Convert.ToString(value.Value))
-                .CustomSort<ICreated>("RecentlyCreated", customer => customer.CreatedAt))
+            .AddDataScorpio(profiles => profiles.AddProfile<CustomerQueryProfile>())
             .BuildServiceProvider();
 
         var processor = services.GetRequiredService<IQueryProcessor>();
@@ -114,6 +110,7 @@ internal static class Program
         public override void Configure(IQueryProfileBuilder<Customer> builder)
         {
             builder
+                .Use<SampleQueryConventions>()
                 .AllowFilter(customer => customer.Name)
                 .AllowFilter(customer => customer.Status)
                 .AllowSearch(customer => customer.Name)
@@ -121,6 +118,17 @@ internal static class Program
                 .AllowSort(customer => customer.CreatedAt)
                 .DefaultSort(customer => customer.CreatedAt, SortDirection.Descending)
                 .MaxPageSize(50);
+        }
+    }
+
+    private sealed class SampleQueryConventions : QueryConventionSet
+    {
+        public override void Configure(IQueryConventionBuilder builder)
+        {
+            builder
+                .CustomFilter<IRegional>("InRegion", value =>
+                    customer => customer.Region == Convert.ToString(value.Value))
+                .CustomSort<ICreated>("RecentlyCreated", customer => customer.CreatedAt);
         }
     }
 
