@@ -8,7 +8,6 @@ This document should describe the public DataScorpio API as it is implemented.
 - `DataScorpio.EntityFrameworkCore`
 - `DataScorpio.AspNetCore`
 - `DataScorpio.Testing`
-- `DataScorpio.DynaBee`
 
 ## Public Surface
 
@@ -25,7 +24,6 @@ This document should describe the public DataScorpio API as it is implemented.
 - `AddDataScorpioEntityFrameworkCore(...)` registers EF Core async query execution.
 - `ToDataScorpioQueryRequest(...)` maps ASP.NET Core query collections to `QueryRequest`.
 - `QueryTestHost<TEntity>` and `QueryResultAssertions` support consumer tests.
-- `AddDataScorpioDynaBee()` registers the current DynaBee acceleration boundary.
 
 ## Examples
 
@@ -53,7 +51,6 @@ services.AddDataScorpio(registry =>
 });
 
 services.AddDataScorpioEntityFrameworkCore();
-services.AddDataScorpioDynaBee();
 ```
 
 ### Native JSON
