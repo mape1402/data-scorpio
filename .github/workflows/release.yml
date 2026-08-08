@@ -48,10 +48,11 @@ jobs:
         shell: bash
         run: |
           TAG="${{ steps.version.outputs.tag }}"
-          TAG_LINE=$(grep -m1 -E "^## \\[$TAG\\]" "$CHANGELOG_PATH" || true)
+          VERSION="${{ steps.version.outputs.version }}"
+          TAG_LINE=$(grep -m1 -E "^## \\[($TAG|$VERSION)\\]" "$CHANGELOG_PATH" || true)
 
           if [[ -z "$TAG_LINE" ]]; then
-            echo "$CHANGELOG_PATH must contain a section for $TAG before deploying."
+            echo "$CHANGELOG_PATH must contain a section for $TAG or $VERSION before deploying."
             exit 1
           fi
 
