@@ -3,12 +3,12 @@ namespace DataScorpio.Testing;
 using DataScorpio.Execution;
 using DataScorpio.Querying;
 
-internal sealed class SieveTesting<TEntity> : ISieveTesting<TEntity>
+internal sealed class DataScorpioTesting<TEntity> : IDataScorpioTesting<TEntity>
 {
     private readonly IQueryProcessor processor;
     private readonly List<TEntity> seed = [];
 
-    public SieveTesting(IQueryProcessor processor)
+    public DataScorpioTesting(IQueryProcessor processor)
     {
         this.processor = processor ?? throw new ArgumentNullException(nameof(processor));
     }
@@ -60,4 +60,5 @@ internal sealed class SieveTesting<TEntity> : ISieveTesting<TEntity>
         return Task.FromResult(result);
     }
 }
+
 

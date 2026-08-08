@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <PackageId>DataScorpio.Testing.Sqlite</PackageId>
+    <Description>SQLite-backed testing helpers for DataScorpio query profiles and requests.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="9.0.5" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="9.0.5" />
+    <PackageReference Include="SQLitePCLRaw.lib.e_sqlite3" Version="2.1.12" />
+    <ProjectReference Include="..\DataScorpio.Testing\DataScorpio.Testing.csproj" />
+  </ItemGroup>
+</Project>

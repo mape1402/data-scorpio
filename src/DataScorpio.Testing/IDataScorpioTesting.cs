@@ -3,10 +3,10 @@ namespace DataScorpio.Testing;
 using DataScorpio.Execution;
 
 /// <summary>
-/// Executes Sieve-compatible query strings in tests.
+/// Executes DataScorpio test queries.
 /// </summary>
 /// <typeparam name="TEntity">The entity type.</typeparam>
-public interface ISieveTesting<TEntity>
+public interface IDataScorpioTesting<TEntity>
 {
     /// <summary>
     /// Seeds the in-memory test dataset.
@@ -17,7 +17,7 @@ public interface ISieveTesting<TEntity>
     Task SeedAsync(IEnumerable<TEntity> items, CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Applies Sieve-compatible filters, sorts, search, and paging to the seeded dataset.
+    /// Applies DataScorpio filters, sorts, search, and paging to the seeded dataset.
     /// </summary>
     /// <param name="filters">The filters string.</param>
     /// <param name="sorts">The sorts string.</param>
@@ -35,7 +35,7 @@ public interface ISieveTesting<TEntity>
         CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Applies Sieve-compatible filters, sorts, search, and paging to a query.
+    /// Applies DataScorpio filters, sorts, search, and paging to a query.
     /// </summary>
     /// <param name="query">The source query.</param>
     /// <param name="filters">The filters string.</param>
@@ -54,4 +54,5 @@ public interface ISieveTesting<TEntity>
         string search = null,
         CancellationToken cancellationToken = default);
 }
+
 

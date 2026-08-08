@@ -12,6 +12,7 @@ This document captures the intended architecture for DataScorpio.
 
 - `src/DataScorpio` contains the primary package.
 - `src/DataScorpio.Testing` contains reusable consumer test helpers.
+- `src/DataScorpio.Testing.Sqlite` contains SQLite-backed provider testing helpers.
 - `tests/DataScorpio.Tests` contains core unit and integration tests.
 - `benchmarks/DataScorpio.Benchmarks` contains performance scenarios when needed.
 - `samples` contains runnable examples for supported use cases.

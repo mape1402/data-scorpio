@@ -18,6 +18,7 @@ Optional packages:
 
 ```bash
 dotnet add package DataScorpio.Testing
+dotnet add package DataScorpio.Testing.Sqlite
 ```
 
 ## Getting Started
@@ -334,17 +335,17 @@ host.Apply(filters: "Status==Active")
     .ShouldContainOnly(customer => customer.Name == "Ada");
 ```
 
-For Sieve-compatible testing through DI:
+For DataScorpio testing through DI:
 
 ```csharp
-services.AddSieveTesting(profiles =>
+services.AddDataScorpioTesting(profiles =>
     profiles.AddProfile<CustomerQueryProfile>());
 
-var sieve = provider.GetRequiredService<ISieveTesting<Customer>>();
+var dataScorpio = provider.GetRequiredService<IDataScorpioTesting<Customer>>();
 
-await sieve.SeedAsync(customers);
+await dataScorpio.SeedAsync(customers);
 
-var result = await sieve.ApplyAsync(
+var result = await dataScorpio.ApplyAsync(
     filters: "Name@=*ada",
     sorts: "Name",
     pageNumber: 1,
@@ -354,6 +355,21 @@ result
     .ShouldBeSortedBy(customer => customer.Name)
     .ShouldContainOnly(customer => customer.IsActive)
     .ShouldHavePage(pageNumber: 1, pageSize: 10, totalRows: 25);
+```
+
+Use `DataScorpio.Testing.Sqlite` when a test should run against SQLite instead of LINQ-to-Objects:
+
+```csharp
+services.AddDataScorpioSqliteTesting(profiles =>
+    profiles.AddProfile<CustomerQueryProfile>());
+
+var dataScorpio = provider.GetRequiredService<IDataScorpioSqliteTesting<Customer>>();
+
+await dataScorpio.SeedAsync(customers);
+
+var result = await dataScorpio.ApplyAsync(
+    filters: "Name@=*ada",
+    sorts: "Name");
 ```
 
 ## API Surface
@@ -390,3 +406,4 @@ Run the basic in-memory sample:
 ```bash
 dotnet run --project samples/DataScorpio.Samples.Basic/DataScorpio.Samples.Basic.csproj
 ```
+
