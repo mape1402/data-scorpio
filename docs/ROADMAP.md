@@ -24,7 +24,7 @@ The library should own:
 - compatibility adapters
 - performance-oriented metadata and expression caching
 
-The library should not be a TurtlePath feature. TurtlePath should consume DataScorpio through a thin adapter.
+The library should not be a TurtlePath feature. TurtlePath should consume DataScorpio through TurtlePath-owned integration code.
 
 ## Core Principles
 
@@ -114,7 +114,6 @@ DataScorpio.Testing
 Potential future packages:
 
 ```text
-DataScorpio.TurtlePath
 DataScorpio.OctoMap
 DataScorpio.Crabalidator
 DataScorpio.CId
@@ -124,7 +123,7 @@ DataScorpio.OpenSearch
 DataScorpio.Analyzers
 ```
 
-If a package introduces dependency on another Elysium library, that dependency belongs in an adapter package, not in `DataScorpio`.
+If a package introduces dependency on another Elysium library, that dependency belongs in the consuming library or its integration package, not in `DataScorpio`.
 
 ## TurtlePath Compatibility Target
 
@@ -144,7 +143,7 @@ StorageReaderAdapter
     .ToBatchAsync<TResponse>();
 ```
 
-The first TurtlePath adapter should implement the same boundary Sieve uses today:
+The TurtlePath-owned integration should implement the same boundary Sieve uses today:
 
 ```csharp
 public sealed class DataScorpioStorageCriteriaApplier : IStorageCriteriaApplier
@@ -903,19 +902,17 @@ Exit criteria:
 - Invalid page requests are rejected.
 - Paging order is deterministic when default sort exists.
 
-## v0.6 - TurtlePath Adapter
+## v0.6 - TurtlePath Integration Readiness
 
 Goals:
 
-- Add `DataScorpio.TurtlePath`.
-- Implement `IStorageCriteriaApplier`.
-- Add `UseDataScorpio()` registration.
+- Keep DataScorpio APIs usable by a TurtlePath-owned `IStorageCriteriaApplier`.
 - Preserve TurtlePath paging ownership.
-- Add migration tests against TurtlePath-style criteria.
+- Add migration tests in TurtlePath against TurtlePath-style criteria.
 
 Exit criteria:
 
-- TurtlePath can replace `.UseSieve()` with `.UseDataScorpio()`.
+- TurtlePath can replace `.UseSieve()` with its own DataScorpio-backed registration.
 - Existing Sieve-style TurtlePath filters and sorts work.
 - No TurtlePath dependency exists in core.
 
@@ -980,7 +977,7 @@ Scope:
 - Typed value parsing.
 - Validation diagnostics.
 - Sieve compatibility mode.
-- TurtlePath adapter.
+- TurtlePath-owned integration support.
 - EF Core adapter.
 - ASP.NET Core adapter.
 - Testing package.
@@ -1165,7 +1162,7 @@ Completed in the first implementation pass:
 - End-to-end core query processor and dependency injection registration.
 - EF Core async query processor package.
 - ASP.NET Core query binding package.
-- TurtlePath `IStorageCriteriaApplier` adapter package.
+- TurtlePath-ready core APIs without a DataScorpio-owned TurtlePath dependency.
 - Testing helper package.
 - Separate DynaBee acceleration package boundary.
 

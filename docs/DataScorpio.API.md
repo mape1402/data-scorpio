@@ -7,7 +7,6 @@ This document should describe the public DataScorpio API as it is implemented.
 - `DataScorpio`
 - `DataScorpio.EntityFrameworkCore`
 - `DataScorpio.AspNetCore`
-- `DataScorpio.TurtlePath`
 - `DataScorpio.Testing`
 - `DataScorpio.DynaBee`
 
@@ -25,7 +24,6 @@ This document should describe the public DataScorpio API as it is implemented.
 - `AddDataScorpio(...)` registers core parser, validator, applier, registry, and processor services.
 - `AddDataScorpioEntityFrameworkCore(...)` registers EF Core async query execution.
 - `ToDataScorpioQueryRequest(...)` maps ASP.NET Core query collections to `QueryRequest`.
-- `UseDataScorpio(...)` swaps TurtlePath criteria filtering/sorting to DataScorpio.
 - `QueryTestHost<TEntity>` and `QueryResultAssertions` support consumer tests.
 - `AddDataScorpioDynaBee()` registers the current DynaBee acceleration boundary.
 

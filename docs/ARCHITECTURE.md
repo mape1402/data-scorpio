@@ -13,7 +13,6 @@ This document captures the intended architecture for DataScorpio.
 - `src/DataScorpio` contains the primary package.
 - `src/DataScorpio.EntityFrameworkCore` contains provider-specific async EF Core execution.
 - `src/DataScorpio.AspNetCore` contains query string binding helpers.
-- `src/DataScorpio.TurtlePath` contains the TurtlePath criteria adapter.
 - `src/DataScorpio.Testing` contains reusable consumer test helpers.
 - `src/DataScorpio.DynaBee` contains the opt-in DynaBee acceleration boundary.
 - `tests/DataScorpio.Tests` contains core unit and integration tests.
@@ -24,7 +23,7 @@ This document captures the intended architecture for DataScorpio.
 
 - Core remains independent from ASP.NET Core, EF Core, TurtlePath, OctoMap, Crabalidator, and DynaBee.
 - Sieve compatibility is implemented as a parser/migration mode, not as the native internal model.
-- TurtlePath integration is adapter-owned and strict by default for new DataScorpio usage.
+- TurtlePath integration is TurtlePath-owned; TurtlePath should reference DataScorpio, not the other way around.
 - Search is implemented before projection because it is immediately useful and provider-safe with configured fields.
 - DynaBee lives in a separate package so acceleration can evolve without coupling the core public API.
 

@@ -26,5 +26,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Entity Framework Core async query processor package.
 - ASP.NET Core query collection binding package.
 - DataScorpio testing helper package.
-- TurtlePath criteria adapter package with strict DataScorpio validation defaults.
+- TurtlePath integration direction documented as TurtlePath-owned, with DataScorpio exposing reusable core APIs.
 - Separate DynaBee acceleration package boundary.

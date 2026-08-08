@@ -4,7 +4,6 @@
     <Project Path="src/DataScorpio.DynaBee/DataScorpio.DynaBee.csproj" />
     <Project Path="src/DataScorpio.EntityFrameworkCore/DataScorpio.EntityFrameworkCore.csproj" />
     <Project Path="src/DataScorpio.Testing/DataScorpio.Testing.csproj" />
-    <Project Path="src/DataScorpio.TurtlePath/DataScorpio.TurtlePath.csproj" />
     <Project Path="src/DataScorpio/DataScorpio.csproj" />
   </Folder>
   <Folder Name="/tests/">
@@ -13,9 +12,6 @@
     <Project Path="tests/DataScorpio.EntityFrameworkCore.Tests/DataScorpio.EntityFrameworkCore.Tests.csproj" />
     <Project Path="tests/DataScorpio.Testing.Tests/DataScorpio.Testing.Tests.csproj" />
     <Project Path="tests/DataScorpio.Tests/DataScorpio.Tests.csproj" />
-    <Project Path="tests/DataScorpio.TurtlePath.Tests/DataScorpio.TurtlePath.Tests.csproj" />
   </Folder>
   <Project Path="../dynabee/src/DynaBee/DynaBee.csproj" />
-  <Project Path="../turtlepath/src/TurtlePath.Abstractions/TurtlePath.Abstractions.csproj" />
-  <Project Path="../turtlepath/src/TurtlePath.Domain/TurtlePath.Domain.csproj" />
 </Solution>

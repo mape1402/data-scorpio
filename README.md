@@ -24,7 +24,7 @@ Implemented foundation:
 - End-to-end query processor with validation diagnostics.
 - Entity Framework Core async execution adapter with allowlisted includes.
 - ASP.NET Core query collection binding adapter.
-- TurtlePath criteria adapter with strict validation by default.
+- TurtlePath-ready core APIs so TurtlePath can own its DataScorpio integration.
 - Testing helpers for query behavior assertions.
 - Opt-in `DataScorpio.DynaBee` package boundary for acceleration work.
 
@@ -75,7 +75,6 @@ var query = applier.Apply(customers.AsQueryable(), descriptor, profile);
 - `DataScorpio`: core descriptors, profiles, parser, validator, query processor, and `IQueryable` applier.
 - `DataScorpio.EntityFrameworkCore`: EF Core async query execution and include application.
 - `DataScorpio.AspNetCore`: HTTP query string binding into `QueryRequest`.
-- `DataScorpio.TurtlePath`: TurtlePath `IStorageCriteriaApplier` integration.
 - `DataScorpio.Testing`: consumer-facing test helpers.
 - `DataScorpio.DynaBee`: separate opt-in acceleration boundary.
 
