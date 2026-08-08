@@ -1,4 +1,7 @@
 <Solution>
+  <Folder Name="/samples/">
+    <Project Path="samples/DataScorpio.Samples.Basic/DataScorpio.Samples.Basic.csproj" />
+  </Folder>
   <Folder Name="/src/">
     <Project Path="src/DataScorpio.AspNetCore/DataScorpio.AspNetCore.csproj" />
     <Project Path="src/DataScorpio.DynaBee/DataScorpio.DynaBee.csproj" />
