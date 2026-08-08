@@ -11,18 +11,24 @@ public sealed class QueryProfileDefinition
     /// <param name="entityType">The configured entity type.</param>
     /// <param name="fields">The configured fields.</param>
     /// <param name="includes">The configured includes.</param>
+    /// <param name="customFilters">The configured custom filters.</param>
+    /// <param name="customSorts">The configured custom sorts.</param>
     /// <param name="defaultSort">The default sort.</param>
     /// <param name="maxPageSize">The maximum page size.</param>
     public QueryProfileDefinition(
         Type entityType,
         IReadOnlyDictionary<string, QueryFieldDefinition> fields,
         IReadOnlyDictionary<string, QueryIncludeDefinition> includes,
+        IReadOnlyDictionary<string, QueryCustomFilterDefinition> customFilters,
+        IReadOnlyDictionary<string, QueryCustomSortDefinition> customSorts,
         QuerySortDefinition defaultSort,
         int? maxPageSize)
     {
         EntityType = entityType ?? throw new ArgumentNullException(nameof(entityType));
         Fields = fields ?? throw new ArgumentNullException(nameof(fields));
         Includes = includes ?? throw new ArgumentNullException(nameof(includes));
+        CustomFilters = customFilters ?? throw new ArgumentNullException(nameof(customFilters));
+        CustomSorts = customSorts ?? throw new ArgumentNullException(nameof(customSorts));
         DefaultSort = defaultSort;
         MaxPageSize = maxPageSize;
     }
@@ -41,6 +47,16 @@ public sealed class QueryProfileDefinition
     /// Gets configured includes by public name or alias.
     /// </summary>
     public IReadOnlyDictionary<string, QueryIncludeDefinition> Includes { get; }
+
+    /// <summary>
+    /// Gets configured custom filters by public name.
+    /// </summary>
+    public IReadOnlyDictionary<string, QueryCustomFilterDefinition> CustomFilters { get; }
+
+    /// <summary>
+    /// Gets configured custom sorts by public name.
+    /// </summary>
+    public IReadOnlyDictionary<string, QueryCustomSortDefinition> CustomSorts { get; }
 
     /// <summary>
     /// Gets the default sort.
@@ -79,6 +95,36 @@ public sealed class QueryProfileDefinition
 
         return Includes.TryGetValue(name, out var include)
             ? include
+            : null;
+    }
+
+    /// <summary>
+    /// Finds a configured custom filter.
+    /// </summary>
+    /// <param name="name">The custom filter name.</param>
+    /// <returns>The custom filter definition if it exists; otherwise, null.</returns>
+    public QueryCustomFilterDefinition FindCustomFilter(string name)
+    {
+        if (string.IsNullOrWhiteSpace(name))
+            return null;
+
+        return CustomFilters.TryGetValue(name, out var filter)
+            ? filter
+            : null;
+    }
+
+    /// <summary>
+    /// Finds a configured custom sort.
+    /// </summary>
+    /// <param name="name">The custom sort name.</param>
+    /// <returns>The custom sort definition if it exists; otherwise, null.</returns>
+    public QueryCustomSortDefinition FindCustomSort(string name)
+    {
+        if (string.IsNullOrWhiteSpace(name))
+            return null;
+
+        return CustomSorts.TryGetValue(name, out var sort)
+            ? sort
             : null;
     }
 }

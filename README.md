@@ -36,55 +36,53 @@ public sealed class CustomerQueryProfile : QueryProfile<Customer>
     public override void Configure(IQueryProfileBuilder<Customer> builder)
     {
         builder
-            .AllowFilter("name", customer => customer.Name)
-            .AllowFilter("status", customer => customer.Status)
-            .AllowSearch("name", customer => customer.Name)
-            .AllowSearch("region", customer => customer.Region)
-            .AllowSort("created", customer => customer.CreatedAt)
-            .DefaultSort("created", customer => customer.CreatedAt, SortDirection.Descending)
+            .AllowFilter(customer => customer.Name)
+            .AllowFilter(customer => customer.Status)
+            .AllowSearch(customer => customer.Name)
+            .AllowSearch(customer => customer.Region)
+            .AllowSort(customer => customer.CreatedAt)
+            .DefaultSort(customer => customer.CreatedAt, SortDirection.Descending)
             .MaxPageSize(100);
     }
 }
 ```
 
-Register DataScorpio:
+Aliases are optional:
 
 ```csharp
-using Microsoft.Extensions.DependencyInjection;
-
-services.AddDataScorpio(profiles =>
-{
-    profiles.AddProfile(new CustomerQueryProfile());
-});
+builder.AllowFilter("customerName", customer => customer.Name);
 ```
 
-Execute a query:
+Apply a request directly to `IQueryable<T>`:
 
 ```csharp
 using DataScorpio.Execution;
 using DataScorpio.Querying;
 
-var processor = serviceProvider.GetRequiredService<IQueryProcessor>();
+var query = customers.AsQueryable().ApplyDataScorpio(
+    new QueryRequest
+    {
+        Filters = "Status==Active,Name@=*ada",
+        Sorts = "-CreatedAt",
+        Search = "north",
+        PageNumber = 1,
+        PageSize = 25
+    },
+    new CustomerQueryProfile());
 
-var result = processor.Execute(customers.AsQueryable(), new QueryRequest
-{
-    Filters = "Status==Active,Name@=*ada",
-    Sorts = "-created",
-    Search = "north",
-    PageNumber = 1,
-    PageSize = 25
-});
-
-if (!result.IsSuccess)
-{
-    foreach (var error in result.Validation.Errors)
-        Console.WriteLine($"{error.Code}: {error.Message}");
-
-    return;
-}
-
-foreach (var customer in result.Result.Items)
+foreach (var customer in query)
     Console.WriteLine(customer.Name);
+```
+
+That is the main path. No EF-specific package is required for filtering an `IQueryable<T>`.
+
+You only need dependency injection when you want profiles/processors managed by your application container:
+
+```csharp
+services.AddDataScorpio(profiles =>
+{
+    profiles.AddProfile(new CustomerQueryProfile());
+});
 ```
 
 ## Query Strings
@@ -95,7 +93,7 @@ DataScorpio supports Sieve-compatible string input through `QueryRequest`.
 var request = new QueryRequest
 {
     Filters = "Status==Active,CreatedAt>=2026-01-01",
-    Sorts = "-created,name",
+    Sorts = "-CreatedAt,Name",
     Search = "ada",
     PageNumber = 1,
     PageSize = 20
@@ -136,14 +134,14 @@ var jsonParser = serviceProvider.GetRequiredService<IJsonQueryDescriptorParser>(
 var descriptor = jsonParser.Parse("""
 {
   "filters": [
-    { "field": "status", "operator": "equals", "value": "Active" }
+    { "field": "Status", "operator": "equals", "value": "Active" }
   ],
   "sorts": [
-    { "field": "created", "direction": "desc" }
+    { "field": "CreatedAt", "direction": "desc" }
   ],
   "search": {
     "term": "north",
-    "fields": [ "region" ]
+    "fields": [ "Region" ]
   },
   "page": {
     "pageNumber": 1,
@@ -162,6 +160,10 @@ JSON `null` is treated as an explicit null query value:
 ```
 
 ## Entity Framework Core
+
+DataScorpio's core query applier already works on EF Core because EF exposes `IQueryable<T>`.
+
+Use the EF package only when you want async count/list execution through `IEfCoreQueryProcessor`.
 
 Install:
 
@@ -192,7 +194,7 @@ var result = await processor.ExecuteAsync(
     new QueryRequest
     {
         Filters = "Status==Active",
-        Sorts = "-created",
+        Sorts = "-CreatedAt",
         PageNumber = 1,
         PageSize = 25
     },
@@ -212,6 +214,44 @@ Then request them through native descriptors:
   "includes": [ "orders" ]
 }
 ```
+
+## Custom Filters And Sorts
+
+Use custom filters when a query name does not map cleanly to one property.
+
+```csharp
+public sealed class CustomerQueryProfile : QueryProfile<Customer>
+{
+    public override void Configure(IQueryProfileBuilder<Customer> builder)
+    {
+        builder
+            .AllowFilter(customer => customer.Name)
+            .AllowFilter(customer => customer.Status)
+            .AllowSort(customer => customer.CreatedAt)
+            .CustomFilter("InRegion", (query, value) =>
+                query.Where(customer => customer.Region == Convert.ToString(value.Value)))
+            .CustomSort("RecentlyCreated", (query, direction) =>
+                direction == SortDirection.Descending
+                    ? query.OrderByDescending(customer => customer.CreatedAt)
+                    : query.OrderBy(customer => customer.CreatedAt));
+    }
+}
+```
+
+Then call it from query strings:
+
+```csharp
+var query = customers.AsQueryable().ApplyDataScorpio(
+    new QueryRequest
+    {
+        Filters = "InRegion==South",
+        Sorts = "-RecentlyCreated"
+    },
+    new CustomerQueryProfile());
+```
+
+Custom filters and sorts receive `IQueryable<T>`, so they can stay provider-friendly when you write provider-translatable LINQ.
+Use `CustomFilterDescriptor` when the custom filter needs the full operator/value descriptor.
 
 ## ASP.NET Core
 
@@ -244,7 +284,7 @@ app.MapGet("/customers", async (
 Supported query keys:
 
 ```text
-?filters=Status==Active&sorts=-created&pageNumber=1&pageSize=25&search=ada
+?filters=Status==Active&sorts=-CreatedAt&pageNumber=1&pageSize=25&search=ada
 ```
 
 ## Testing

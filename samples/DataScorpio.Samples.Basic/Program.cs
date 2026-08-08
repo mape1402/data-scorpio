@@ -4,54 +4,61 @@ using DataScorpio.Execution;
 using DataScorpio.Parsing.Json;
 using DataScorpio.Profiles;
 using DataScorpio.Querying;
-using Microsoft.Extensions.DependencyInjection;
 
 internal static class Program
 {
     private static void Main()
     {
-        using var services = new ServiceCollection()
-            .AddDataScorpio(profiles => profiles.AddProfile(new CustomerQueryProfile()))
-            .BuildServiceProvider();
-
-        var processor = services.GetRequiredService<IQueryProcessor>();
-        var jsonParser = services.GetRequiredService<IJsonQueryDescriptorParser>();
         var customers = SeedCustomers().AsQueryable();
+        var profile = new CustomerQueryProfile();
 
-        RunSieveCompatibleQuery(processor, customers);
-        RunNativeJsonQuery(processor, jsonParser, customers);
+        RunSimpleQueryableQuery(customers, profile);
+        RunCustomQuery(customers, profile);
+        RunNativeJsonQuery(customers, profile);
     }
 
-    private static void RunSieveCompatibleQuery(IQueryProcessor processor, IQueryable<Customer> customers)
+    private static void RunSimpleQueryableQuery(IQueryable<Customer> customers, CustomerQueryProfile profile)
     {
-        var result = processor.Execute(customers, new QueryRequest
-        {
-            Filters = "Status==Active,Name@=*a",
-            Sorts = "-created",
-            Search = "north",
-            PageNumber = 1,
-            PageSize = 2
-        });
+        var results = customers.ApplyDataScorpio(
+            new QueryRequest
+            {
+                Filters = "Status==Active,Name@=*a",
+                Sorts = "-CreatedAt",
+                Search = "north",
+                PageNumber = 1,
+                PageSize = 2
+            },
+            profile);
 
-        PrintResult("Sieve-compatible query", result);
+        PrintItems("Direct IQueryable query", results);
     }
 
-    private static void RunNativeJsonQuery(
-        IQueryProcessor processor,
-        IJsonQueryDescriptorParser jsonParser,
-        IQueryable<Customer> customers)
+    private static void RunCustomQuery(IQueryable<Customer> customers, CustomerQueryProfile profile)
     {
-        var descriptor = jsonParser.Parse("""
+        var results = customers.ApplyDataScorpio(
+            new QueryRequest
+            {
+                Filters = "InRegion==South",
+                Sorts = "-RecentlyCreated"
+            },
+            profile);
+
+        PrintItems("Custom filter and sort", results);
+    }
+
+    private static void RunNativeJsonQuery(IQueryable<Customer> customers, CustomerQueryProfile profile)
+    {
+        var descriptor = new JsonQueryDescriptorParser().Parse("""
         {
           "filters": [
-            { "field": "status", "operator": "equals", "value": "Active" }
+            { "field": "Status", "operator": "equals", "value": "Active" }
           ],
           "sorts": [
-            { "field": "created", "direction": "desc" }
+            { "field": "CreatedAt", "direction": "desc" }
           ],
           "search": {
             "term": "south",
-            "fields": [ "region" ]
+            "fields": [ "Region" ]
           },
           "page": {
             "pageNumber": 1,
@@ -60,27 +67,16 @@ internal static class Program
         }
         """);
 
-        var result = processor.Execute(customers, descriptor);
+        var results = customers.ApplyDataScorpio(descriptor, profile);
 
-        PrintResult("Native JSON descriptor query", result);
+        PrintItems("Native JSON descriptor query", results);
     }
 
-    private static void PrintResult(string title, QueryExecutionResult<Customer> result)
+    private static void PrintItems(string title, IQueryable<Customer> query)
     {
         Console.WriteLine(title);
 
-        if (!result.IsSuccess)
-        {
-            foreach (var error in result.Validation.Errors)
-                Console.WriteLine($"  {error.Code}: {error.Message}");
-
-            return;
-        }
-
-        Console.WriteLine($"  Page {result.Result.PageNumber}/{result.Result.PageCount}");
-        Console.WriteLine($"  Rows: {result.Result.RowCount}");
-
-        foreach (var customer in result.Result.Items)
+        foreach (var customer in query)
             Console.WriteLine($"  - {customer.Name} | {customer.Status} | {customer.Region} | {customer.CreatedAt:yyyy-MM-dd}");
 
         Console.WriteLine();
@@ -100,12 +96,17 @@ internal static class Program
         public override void Configure(IQueryProfileBuilder<Customer> builder)
         {
             builder
-                .AllowFilter("name", customer => customer.Name)
-                .AllowFilter("status", customer => customer.Status)
-                .AllowSearch("name", customer => customer.Name)
-                .AllowSearch("region", customer => customer.Region)
-                .AllowSort("created", customer => customer.CreatedAt)
-                .DefaultSort("created", customer => customer.CreatedAt, SortDirection.Descending)
+                .AllowFilter(customer => customer.Name)
+                .AllowFilter(customer => customer.Status)
+                .AllowSearch(customer => customer.Name)
+                .AllowSearch(customer => customer.Region)
+                .AllowSort(customer => customer.CreatedAt)
+                .CustomFilter("InRegion", (query, value) =>
+                    query.Where(customer => customer.Region == Convert.ToString(value.Value)))
+                .CustomSort("RecentlyCreated", (query, direction) => direction == SortDirection.Descending
+                    ? query.OrderByDescending(customer => customer.CreatedAt)
+                    : query.OrderBy(customer => customer.CreatedAt))
+                .DefaultSort(customer => customer.CreatedAt, SortDirection.Descending)
                 .MaxPageSize(50);
         }
     }

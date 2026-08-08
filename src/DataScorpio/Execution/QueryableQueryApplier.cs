@@ -87,6 +87,36 @@ public sealed class QueryableQueryApplier : IQueryableQueryApplier
             if (group.Filters.Count == 0)
                 continue;
 
+            if (group.Filters.Any(filter => profile.FindCustomFilter(filter.Field) != null))
+            {
+                if (group.LogicalOperator == QueryLogicalOperator.Or)
+                    throw new NotSupportedException("Custom filters cannot be combined inside Sieve OR groups.");
+
+                foreach (var filter in group.Filters)
+                {
+                    var customFilter = profile.FindCustomFilter(filter.Field);
+
+                    if (customFilter != null)
+                    {
+                        source = customFilter.Apply(source, filter);
+                        continue;
+                    }
+
+                    source = ApplyFilters(source, new QueryDescriptor
+                    {
+                        FilterGroups =
+                        [
+                            new FilterGroupDescriptor
+                            {
+                                Filters = [filter]
+                            }
+                        ]
+                    }, profile);
+                }
+
+                continue;
+            }
+
             var parameter = Expression.Parameter(typeof(TEntity), "entity");
             Expression body = null;
 
@@ -140,7 +170,18 @@ public sealed class QueryableQueryApplier : IQueryableQueryApplier
             var field = profile.FindField(sort.Field);
 
             if (field == null)
+            {
+                var customSort = profile.FindCustomSort(sort.Field);
+
+                if (customSort != null)
+                {
+                    source = customSort.Apply(source, sort.Direction);
+                    ordered = true;
+                    continue;
+                }
+
                 throw new InvalidOperationException($"Field '{sort.Field}' is not configured.");
+            }
 
             source = ApplySort(source, field, sort.Direction, ordered);
             ordered = true;

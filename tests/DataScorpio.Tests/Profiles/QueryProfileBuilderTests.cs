@@ -58,6 +58,15 @@ public sealed class QueryProfileBuilderTests
     }
 
     [Fact]
+    public void Profile_captures_custom_filters_and_sorts()
+    {
+        var definition = new CustomerQueryProfile().BuildDefinition();
+
+        Assert.NotNull(definition.FindCustomFilter("activeOnly"));
+        Assert.NotNull(definition.FindCustomSort("newest"));
+    }
+
+    [Fact]
     public void Builder_rejects_non_member_expressions()
     {
         var builder = new QueryProfileBuilder<Customer>();
@@ -100,6 +109,10 @@ public sealed class QueryProfileBuilderTests
                 .AllowFilter("email", customer => customer.Email)
                 .AllowFilter("city", customer => customer.Address.City)
                 .AllowInclude("orders", customer => customer.Orders)
+                .CustomFilter("activeOnly", (query, value) => query.Where(customer => customer.Email != null))
+                .CustomSort("newest", (query, direction) => direction == SortDirection.Descending
+                    ? query.OrderByDescending(customer => customer.CreatedAt)
+                    : query.OrderBy(customer => customer.CreatedAt))
                 .DefaultSort("created", customer => customer.CreatedAt, SortDirection.Descending)
                 .MaxPageSize(100);
         }
