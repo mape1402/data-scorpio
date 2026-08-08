@@ -1,6 +1,7 @@
 namespace DataScorpio.Testing;
 
 using DataScorpio.Execution;
+using System.Linq.Expressions;
 
 /// <summary>
 /// Lightweight assertion helpers for DataScorpio testing.
@@ -70,22 +71,52 @@ public static class QueryResultAssertions
     /// <param name="result">The execution result.</param>
     /// <param name="pageNumber">The expected page number.</param>
     /// <param name="pageSize">The expected page size.</param>
-    /// <param name="rowCount">The expected row count.</param>
+    /// <param name="totalRows">The expected total row count.</param>
     /// <returns>The same result.</returns>
     public static QueryExecutionResult<T> ShouldHavePage<T>(
         this QueryExecutionResult<T> result,
         int pageNumber,
         int pageSize,
-        long rowCount)
+        long totalRows)
     {
         result.ShouldBeSuccessful();
 
         if (result.Result.PageNumber != pageNumber ||
             result.Result.PageSize != pageSize ||
-            result.Result.RowCount != rowCount)
+            result.Result.RowCount != totalRows)
         {
             throw new InvalidOperationException("Query page metadata did not match the expected values.");
         }
+
+        return result;
+    }
+
+    /// <summary>
+    /// Throws when items are not sorted by the selected key.
+    /// </summary>
+    /// <typeparam name="T">The item type.</typeparam>
+    /// <param name="result">The execution result.</param>
+    /// <param name="keySelector">The expected sort key.</param>
+    /// <param name="descending">Whether the expected order is descending.</param>
+    /// <returns>The same result.</returns>
+    public static QueryExecutionResult<T> ShouldBeSortedBy<T>(
+        this QueryExecutionResult<T> result,
+        Expression<Func<T, object>> keySelector,
+        bool descending = false)
+    {
+        result.ShouldBeSuccessful();
+
+        if (keySelector == null)
+            throw new ArgumentNullException(nameof(keySelector));
+
+        var compiled = keySelector.Compile();
+        var actual = result.Result.Items.ToArray();
+        var expected = descending
+            ? actual.OrderByDescending(compiled).ToArray()
+            : actual.OrderBy(compiled).ToArray();
+
+        if (!actual.SequenceEqual(expected))
+            throw new InvalidOperationException("Expected result items to be sorted by the selected key.");
 
         return result;
     }
