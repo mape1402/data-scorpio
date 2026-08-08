@@ -14,7 +14,7 @@ public sealed class DataScorpioServiceCollectionExtensionsTests
         var services = new ServiceCollection();
 
         services.AddDataScorpio(profiles =>
-            profiles.AddProfile(new CustomerQueryProfile()));
+            profiles.AddProfile<CustomerQueryProfile>());
 
         using var provider = services.BuildServiceProvider();
 
@@ -28,7 +28,7 @@ public sealed class DataScorpioServiceCollectionExtensionsTests
         var services = new ServiceCollection();
 
         services.AddDataScorpioSieveCompatibility(profiles =>
-            profiles.AddProfile(new CustomerQueryProfile()));
+            profiles.AddProfile<CustomerQueryProfile>());
 
         using var provider = services.BuildServiceProvider();
         var processor = provider.GetRequiredService<IQueryProcessor>();

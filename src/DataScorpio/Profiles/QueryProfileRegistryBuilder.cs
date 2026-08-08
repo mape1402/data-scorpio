@@ -8,6 +8,15 @@ public sealed class QueryProfileRegistryBuilder
     private readonly List<QueryProfileDefinition> profiles = [];
 
     /// <summary>
+    /// Adds a profile by type.
+    /// </summary>
+    /// <typeparam name="TProfile">The profile type.</typeparam>
+    /// <returns>The same builder.</returns>
+    public QueryProfileRegistryBuilder AddProfile<TProfile>()
+        where TProfile : IQueryProfile, new()
+        => AddProfile(new TProfile().BuildDefinition());
+
+    /// <summary>
     /// Adds a profile instance.
     /// </summary>
     /// <typeparam name="TEntity">The entity type.</typeparam>

@@ -4,51 +4,56 @@ using DataScorpio.Execution;
 using DataScorpio.Parsing.Json;
 using DataScorpio.Profiles;
 using DataScorpio.Querying;
+using Microsoft.Extensions.DependencyInjection;
 
 internal static class Program
 {
     private static void Main()
     {
         var customers = SeedCustomers().AsQueryable();
-        var profile = new CustomerQueryProfile();
+        using var services = new ServiceCollection()
+            .AddDataScorpio(profiles => profiles.AddProfile<CustomerQueryProfile>())
+            .BuildServiceProvider();
 
-        RunSimpleQueryableQuery(customers, profile);
-        RunCustomQuery(customers, profile);
-        RunNativeJsonQuery(customers, profile);
+        var processor = services.GetRequiredService<IQueryProcessor>();
+        var jsonParser = services.GetRequiredService<IJsonQueryDescriptorParser>();
+
+        RunSimpleQueryableQuery(customers, processor);
+        RunCustomQuery(customers, processor);
+        RunNativeJsonQuery(customers, processor, jsonParser);
     }
 
-    private static void RunSimpleQueryableQuery(IQueryable<Customer> customers, CustomerQueryProfile profile)
+    private static void RunSimpleQueryableQuery(IQueryable<Customer> customers, IQueryProcessor processor)
     {
-        var results = customers.ApplyDataScorpio(
-            new QueryRequest
-            {
-                Filters = "Status==Active,Name@=*a",
-                Sorts = "-CreatedAt",
-                Search = "north",
-                PageNumber = 1,
-                PageSize = 2
-            },
-            profile);
+        var result = processor.Execute(customers, new QueryRequest
+        {
+            Filters = "Status==Active,Name@=*a",
+            Sorts = "-CreatedAt",
+            Search = "north",
+            PageNumber = 1,
+            PageSize = 2
+        });
 
-        PrintItems("Direct IQueryable query", results);
+        PrintItems("IQueryable query", result);
     }
 
-    private static void RunCustomQuery(IQueryable<Customer> customers, CustomerQueryProfile profile)
+    private static void RunCustomQuery(IQueryable<Customer> customers, IQueryProcessor processor)
     {
-        var results = customers.ApplyDataScorpio(
-            new QueryRequest
-            {
-                Filters = "InRegion==South",
-                Sorts = "-RecentlyCreated"
-            },
-            profile);
+        var result = processor.Execute(customers, new QueryRequest
+        {
+            Filters = "InRegion==South",
+            Sorts = "-RecentlyCreated"
+        });
 
-        PrintItems("Custom filter and sort", results);
+        PrintItems("Custom filter and sort", result);
     }
 
-    private static void RunNativeJsonQuery(IQueryable<Customer> customers, CustomerQueryProfile profile)
+    private static void RunNativeJsonQuery(
+        IQueryable<Customer> customers,
+        IQueryProcessor processor,
+        IJsonQueryDescriptorParser jsonParser)
     {
-        var descriptor = new JsonQueryDescriptorParser().Parse("""
+        var descriptor = jsonParser.Parse("""
         {
           "filters": [
             { "field": "Status", "operator": "equals", "value": "Active" }
@@ -67,16 +72,25 @@ internal static class Program
         }
         """);
 
-        var results = customers.ApplyDataScorpio(descriptor, profile);
+        var result = processor.Execute(customers, descriptor);
 
-        PrintItems("Native JSON descriptor query", results);
+        PrintItems("Native JSON descriptor query", result);
     }
 
-    private static void PrintItems(string title, IQueryable<Customer> query)
+    private static void PrintItems(string title, QueryExecutionResult<Customer> result)
     {
         Console.WriteLine(title);
 
-        foreach (var customer in query)
+        if (!result.IsSuccess)
+        {
+            foreach (var error in result.Validation.Errors)
+                Console.WriteLine($"  - {error.Code}: {error.Message}");
+
+            Console.WriteLine();
+            return;
+        }
+
+        foreach (var customer in result.Result.Items)
             Console.WriteLine($"  - {customer.Name} | {customer.Status} | {customer.Region} | {customer.CreatedAt:yyyy-MM-dd}");
 
         Console.WriteLine();
