@@ -4,7 +4,7 @@ namespace DataScorpio.Profiles;
 /// Base class for typed query profiles.
 /// </summary>
 /// <typeparam name="TEntity">The entity type.</typeparam>
-public abstract class QueryProfile<TEntity>
+public abstract class QueryProfile<TEntity> : IQueryProfile
 {
     /// <summary>
     /// Configures the query profile.

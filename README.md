@@ -53,36 +53,35 @@ Aliases are optional:
 builder.AllowFilter("customerName", customer => customer.Name);
 ```
 
-Apply a request directly to `IQueryable<T>`:
+Register DataScorpio once:
+
+```csharp
+services.AddDataScorpio(profiles =>
+{
+    profiles.AddProfile<CustomerQueryProfile>();
+});
+```
+
+Execute queries through the processor. DataScorpio works over `IQueryable<T>`, so the source can come from EF Core, another ORM, or an in-memory query.
 
 ```csharp
 using DataScorpio.Execution;
 using DataScorpio.Querying;
 
-var query = customers.AsQueryable().ApplyDataScorpio(
-    new QueryRequest
-    {
-        Filters = "Status==Active,Name@=*ada",
-        Sorts = "-CreatedAt",
-        Search = "north",
-        PageNumber = 1,
-        PageSize = 25
-    },
-    new CustomerQueryProfile());
-
-foreach (var customer in query)
-    Console.WriteLine(customer.Name);
-```
-
-That is the main path. No EF-specific package is required for filtering an `IQueryable<T>`.
-
-You only need dependency injection when you want profiles/processors managed by your application container:
-
-```csharp
-services.AddDataScorpio(profiles =>
+var result = processor.Execute(customers.AsQueryable(), new QueryRequest
 {
-    profiles.AddProfile(new CustomerQueryProfile());
+    Filters = "Status==Active,Name@=*ada",
+    Sorts = "-CreatedAt",
+    Search = "north",
+    PageNumber = 1,
+    PageSize = 25
 });
+
+if (result.IsSuccess)
+{
+    foreach (var customer in result.Result.Items)
+        Console.WriteLine(customer.Name);
+}
 ```
 
 ## Query Strings
@@ -176,7 +175,7 @@ Register:
 ```csharp
 services.AddDataScorpio(profiles =>
 {
-    profiles.AddProfile(new CustomerQueryProfile());
+    profiles.AddProfile<CustomerQueryProfile>();
 });
 
 services.AddDataScorpioEntityFrameworkCore();
@@ -238,16 +237,14 @@ public sealed class CustomerQueryProfile : QueryProfile<Customer>
 }
 ```
 
-Then call it from query strings:
+Then call it from query strings through the processor:
 
 ```csharp
-var query = customers.AsQueryable().ApplyDataScorpio(
-    new QueryRequest
-    {
-        Filters = "InRegion==South",
-        Sorts = "-RecentlyCreated"
-    },
-    new CustomerQueryProfile());
+var result = processor.Execute(customers.AsQueryable(), new QueryRequest
+{
+    Filters = "InRegion==South",
+    Sorts = "-RecentlyCreated"
+});
 ```
 
 Custom filters and sorts receive `IQueryable<T>`, so they can stay provider-friendly when you write provider-translatable LINQ.

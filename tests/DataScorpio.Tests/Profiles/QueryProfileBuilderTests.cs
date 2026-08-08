@@ -67,6 +67,18 @@ public sealed class QueryProfileBuilderTests
     }
 
     [Fact]
+    public void Registry_builder_adds_profile_by_type()
+    {
+        var registry = new QueryProfileRegistryBuilder()
+            .AddProfile<CustomerQueryProfile>()
+            .Build();
+
+        var definition = registry.GetProfile<Customer>();
+
+        Assert.NotNull(definition.FindField("customerName"));
+    }
+
+    [Fact]
     public void Builder_rejects_non_member_expressions()
     {
         var builder = new QueryProfileBuilder<Customer>();
