@@ -122,6 +122,21 @@ public interface IQueryProfileBuilder<TEntity>
         Expression<Func<TContract, object>> keySelector);
 
     /// <summary>
+    /// Applies reusable query conventions to the current profile.
+    /// </summary>
+    /// <param name="conventions">The convention set.</param>
+    /// <returns>The same builder.</returns>
+    IQueryProfileBuilder<TEntity> Use(QueryConventionSet conventions);
+
+    /// <summary>
+    /// Applies reusable query conventions to the current profile.
+    /// </summary>
+    /// <typeparam name="TConventionSet">The convention set type.</typeparam>
+    /// <returns>The same builder.</returns>
+    IQueryProfileBuilder<TEntity> Use<TConventionSet>()
+        where TConventionSet : QueryConventionSet, new();
+
+    /// <summary>
     /// Sets the default sort using the member name as the public query name.
     /// </summary>
     /// <param name="field">The field expression.</param>

@@ -67,6 +67,15 @@ public sealed class QueryProfileBuilderTests
     }
 
     [Fact]
+    public void Profile_applies_convention_sets()
+    {
+        var definition = new CustomerConventionProfile().BuildDefinition();
+
+        Assert.NotNull(definition.FindCustomFilter("hasEmail"));
+        Assert.NotNull(definition.FindCustomSort("byCreated"));
+    }
+
+    [Fact]
     public void Registry_builder_adds_profile_by_type()
     {
         var registry = new QueryProfileRegistryBuilder()
@@ -130,7 +139,35 @@ public sealed class QueryProfileBuilderTests
         }
     }
 
-    private sealed class Customer
+    private sealed class CustomerConventionProfile : QueryProfile<Customer>
+    {
+        public override void Configure(IQueryProfileBuilder<Customer> builder)
+        {
+            builder.Use<CustomerQueryConventions>();
+        }
+    }
+
+    private sealed class CustomerQueryConventions : QueryConventionSet
+    {
+        public override void Configure(IQueryConventionBuilder builder)
+        {
+            builder
+                .CustomFilter<IHasEmail>("hasEmail", value => customer => customer.Email != null)
+                .CustomSort<IHasCreatedAt>("byCreated", customer => customer.CreatedAt);
+        }
+    }
+
+    private interface IHasEmail
+    {
+        string Email { get; }
+    }
+
+    private interface IHasCreatedAt
+    {
+        DateTime CreatedAt { get; }
+    }
+
+    private sealed class Customer : IHasEmail, IHasCreatedAt
     {
         public string Name { get; init; }
 

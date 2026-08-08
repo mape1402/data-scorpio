@@ -250,7 +250,7 @@ var result = processor.Execute(customers.AsQueryable(), new QueryRequest
 Custom filters and sorts receive `IQueryable<T>`, so they can stay provider-friendly when you write provider-translatable LINQ.
 Use `CustomFilterDescriptor` when the custom filter needs the full operator/value descriptor.
 
-Reusable custom filters and sorts can target a base class or interface contract:
+Reusable custom filters and sorts can target a base class or interface contract. Put them in a convention set:
 
 ```csharp
 public interface ITenantScoped
@@ -263,23 +263,31 @@ public interface ICreated
     DateTime CreatedAt { get; }
 }
 
-builder
-    .CustomFilter<ITenantScoped>("ForTenant", value =>
-        entity => entity.TenantId == Convert.ToString(value.Value))
-    .CustomSort<ICreated>("RecentlyCreated", entity => entity.CreatedAt);
+public sealed class AppQueryConventions : QueryConventionSet
+{
+    public override void Configure(IQueryConventionBuilder builder)
+    {
+        builder
+            .CustomFilter<ITenantScoped>("ForTenant", value =>
+                entity => entity.TenantId == Convert.ToString(value.Value))
+            .CustomSort<ICreated>("RecentlyCreated", entity => entity.CreatedAt);
+    }
+}
 ```
 
-Any profile whose entity implements that contract can use the same custom query name.
-
-You can also register contract custom queries once for every matching profile:
+Then apply the convention set from any compatible profile:
 
 ```csharp
-services.AddDataScorpio(profiles => profiles
-    .AddProfile<CustomerQueryProfile>()
-    .AddProfile<OrderQueryProfile>()
-    .CustomFilter<ITenantScoped>("ForTenant", value =>
-        entity => entity.TenantId == Convert.ToString(value.Value))
-    .CustomSort<ICreated>("RecentlyCreated", entity => entity.CreatedAt));
+public sealed class CustomerQueryProfile : QueryProfile<Customer>
+{
+    public override void Configure(IQueryProfileBuilder<Customer> builder)
+    {
+        builder
+            .Use<AppQueryConventions>()
+            .AllowFilter(customer => customer.Name)
+            .AllowSort(customer => customer.CreatedAt);
+    }
+}
 ```
 
 ## ASP.NET Core
