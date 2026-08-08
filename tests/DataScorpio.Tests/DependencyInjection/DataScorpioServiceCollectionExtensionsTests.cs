@@ -42,6 +42,29 @@ public sealed class DataScorpioServiceCollectionExtensionsTests
         Assert.Equal("Ada", Assert.Single(result.Result.Items).Name);
     }
 
+    [Fact]
+    public void AddDataScorpio_applies_contract_custom_queries_to_matching_profiles()
+    {
+        var services = new ServiceCollection();
+
+        services.AddDataScorpio(profiles => profiles
+            .AddProfile<CustomerQueryProfile>()
+            .CustomFilter<IHasName>("named", value => entity => entity.Name == Convert.ToString(value.Value))
+            .CustomSort<IHasName>("byName", entity => entity.Name));
+
+        using var provider = services.BuildServiceProvider();
+        var processor = provider.GetRequiredService<IQueryProcessor>();
+
+        var result = processor.Execute(Customers().AsQueryable(), new QueryRequest
+        {
+            Filters = "named==Grace",
+            Sorts = "-byName"
+        });
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal("Grace", Assert.Single(result.Result.Items).Name);
+    }
+
     private static IReadOnlyList<Customer> Customers()
         => [new Customer { Name = "Ada" }, new Customer { Name = "Grace" }];
 
@@ -53,7 +76,12 @@ public sealed class DataScorpioServiceCollectionExtensionsTests
         }
     }
 
-    private sealed class Customer
+    private interface IHasName
+    {
+        string Name { get; }
+    }
+
+    private sealed class Customer : IHasName
     {
         public string Name { get; init; }
     }

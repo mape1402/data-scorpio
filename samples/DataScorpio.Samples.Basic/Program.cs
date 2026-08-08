@@ -12,7 +12,11 @@ internal static class Program
     {
         var customers = SeedCustomers().AsQueryable();
         using var services = new ServiceCollection()
-            .AddDataScorpio(profiles => profiles.AddProfile<CustomerQueryProfile>())
+            .AddDataScorpio(profiles => profiles
+                .AddProfile<CustomerQueryProfile>()
+                .CustomFilter<IRegional>("InRegion", value =>
+                    customer => customer.Region == Convert.ToString(value.Value))
+                .CustomSort<ICreated>("RecentlyCreated", customer => customer.CreatedAt))
             .BuildServiceProvider();
 
         var processor = services.GetRequiredService<IQueryProcessor>();
@@ -115,19 +119,24 @@ internal static class Program
                 .AllowSearch(customer => customer.Name)
                 .AllowSearch(customer => customer.Region)
                 .AllowSort(customer => customer.CreatedAt)
-                .CustomFilter("InRegion", (query, value) =>
-                    query.Where(customer => customer.Region == Convert.ToString(value.Value)))
-                .CustomSort("RecentlyCreated", (query, direction) => direction == SortDirection.Descending
-                    ? query.OrderByDescending(customer => customer.CreatedAt)
-                    : query.OrderBy(customer => customer.CreatedAt))
                 .DefaultSort(customer => customer.CreatedAt, SortDirection.Descending)
                 .MaxPageSize(50);
         }
+    }
+
+    private interface IRegional
+    {
+        string Region { get; }
+    }
+
+    private interface ICreated
+    {
+        DateTime CreatedAt { get; }
     }
 
     private sealed record Customer(
         string Name,
         string Status,
         string Region,
-        DateTime CreatedAt);
+        DateTime CreatedAt) : IRegional, ICreated;
 }
