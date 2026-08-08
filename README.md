@@ -52,6 +52,14 @@ dotnet build --configuration Release
 dotnet test --configuration Release --no-build
 ```
 
+## Samples
+
+Run the basic in-memory sample:
+
+```bash
+dotnet run --project samples/DataScorpio.Samples.Basic/DataScorpio.Samples.Basic.csproj
+```
+
 ## Example
 
 ```csharp
