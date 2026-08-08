@@ -138,33 +138,6 @@ public sealed class QueryProfileBuilder<TEntity> : IQueryProfileBuilder<TEntity>
     }
 
     /// <inheritdoc/>
-    public IQueryProfileBuilder<TEntity> Use(QueryConventionSet conventions)
-    {
-        if (conventions == null)
-            throw new ArgumentNullException(nameof(conventions));
-
-        foreach (var convention in conventions.BuildConventions().Where(convention => convention.CanApply(typeof(TEntity))))
-        {
-            var filter = convention.CreateFilter(typeof(TEntity));
-
-            if (filter != null && !customFilters.ContainsKey(filter.Name))
-                customFilters[filter.Name] = filter;
-
-            var sort = convention.CreateSort(typeof(TEntity));
-
-            if (sort != null && !customSorts.ContainsKey(sort.Name))
-                customSorts[sort.Name] = sort;
-        }
-
-        return this;
-    }
-
-    /// <inheritdoc/>
-    public IQueryProfileBuilder<TEntity> Use<TConventionSet>()
-        where TConventionSet : QueryConventionSet, new()
-        => Use(new TConventionSet());
-
-    /// <inheritdoc/>
     public IQueryProfileBuilder<TEntity> DefaultSort(
         Expression<Func<TEntity, object>> field,
         SortDirection direction = SortDirection.Ascending)

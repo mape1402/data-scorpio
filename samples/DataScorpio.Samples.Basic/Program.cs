@@ -12,7 +12,9 @@ internal static class Program
     {
         var customers = SeedCustomers().AsQueryable();
         using var services = new ServiceCollection()
-            .AddDataScorpio(profiles => profiles.AddProfile<CustomerQueryProfile>())
+            .AddDataScorpio(profiles => profiles
+                .AddConventions<SampleQueryConventions>()
+                .AddProfile<CustomerQueryProfile>())
             .BuildServiceProvider();
 
         var processor = services.GetRequiredService<IQueryProcessor>();
@@ -110,7 +112,6 @@ internal static class Program
         public override void Configure(IQueryProfileBuilder<Customer> builder)
         {
             builder
-                .Use<SampleQueryConventions>()
                 .AllowFilter(customer => customer.Name)
                 .AllowFilter(customer => customer.Status)
                 .AllowSearch(customer => customer.Name)

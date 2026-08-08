@@ -52,6 +52,30 @@ public sealed class QueryProfileRegistryBuilder
     }
 
     /// <summary>
+    /// Adds a reusable convention set for every matching profile.
+    /// </summary>
+    /// <param name="conventionSet">The convention set.</param>
+    /// <returns>The same builder.</returns>
+    public QueryProfileRegistryBuilder AddConventions(QueryConventionSet conventionSet)
+    {
+        if (conventionSet == null)
+            throw new ArgumentNullException(nameof(conventionSet));
+
+        conventions.AddRange(conventionSet.BuildConventions());
+
+        return this;
+    }
+
+    /// <summary>
+    /// Adds a reusable convention set for every matching profile.
+    /// </summary>
+    /// <typeparam name="TConventionSet">The convention set type.</typeparam>
+    /// <returns>The same builder.</returns>
+    public QueryProfileRegistryBuilder AddConventions<TConventionSet>()
+        where TConventionSet : QueryConventionSet, new()
+        => AddConventions(new TConventionSet());
+
+    /// <summary>
     /// Adds a reusable custom filter for every profile whose entity implements or inherits a contract.
     /// </summary>
     /// <typeparam name="TContract">The base class or interface contract.</typeparam>

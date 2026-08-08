@@ -275,19 +275,21 @@ public sealed class AppQueryConventions : QueryConventionSet
 }
 ```
 
-Then apply the convention set from any compatible profile:
+Then register the convention set once:
 
 ```csharp
-public sealed class CustomerQueryProfile : QueryProfile<Customer>
-{
-    public override void Configure(IQueryProfileBuilder<Customer> builder)
-    {
-        builder
-            .Use<AppQueryConventions>()
-            .AllowFilter(customer => customer.Name)
-            .AllowSort(customer => customer.CreatedAt);
-    }
-}
+services.AddDataScorpio(profiles => profiles
+    .AddConventions<AppQueryConventions>()
+    .AddProfile<CustomerQueryProfile>()
+    .AddProfile<OrderQueryProfile>());
+```
+
+Every profile whose entity implements a matching contract receives those custom query names automatically.
+
+```csharp
+builder
+    .AllowFilter(customer => customer.Name)
+    .AllowSort(customer => customer.CreatedAt);
 ```
 
 ## ASP.NET Core
