@@ -17,7 +17,6 @@ dotnet add package DataScorpio
 Optional packages:
 
 ```bash
-dotnet add package DataScorpio.EntityFrameworkCore
 dotnet add package DataScorpio.AspNetCore
 dotnet add package DataScorpio.Testing
 ```
@@ -161,14 +160,6 @@ JSON `null` is treated as an explicit null query value:
 
 DataScorpio's core query applier already works on EF Core because EF exposes `IQueryable<T>`.
 
-Use the EF package only when you want async count/list execution through `IEfCoreQueryProcessor`.
-
-Install:
-
-```bash
-dotnet add package DataScorpio.EntityFrameworkCore
-```
-
 Register:
 
 ```csharp
@@ -176,18 +167,14 @@ services.AddDataScorpio(profiles =>
 {
     profiles.AddProfile<CustomerQueryProfile>();
 });
-
-services.AddDataScorpioEntityFrameworkCore();
 ```
 
-Execute with EF Core async APIs:
+Execute over a `DbSet<T>` or any EF `IQueryable<T>`:
 
 ```csharp
-using DataScorpio.EntityFrameworkCore.Execution;
+using DataScorpio.Execution;
 
-var processor = serviceProvider.GetRequiredService<IEfCoreQueryProcessor>();
-
-var result = await processor.ExecuteAsync(
+var result = processor.Execute(
     dbContext.Customers.AsNoTracking(),
     new QueryRequest
     {
@@ -195,8 +182,7 @@ var result = await processor.ExecuteAsync(
         Sorts = "-CreatedAt",
         PageNumber = 1,
         PageSize = 25
-    },
-    cancellationToken);
+    });
 ```
 
 Includes are deny-by-default and must be configured in the profile:
@@ -307,11 +293,11 @@ using DataScorpio.AspNetCore.QueryRequestBinding;
 app.MapGet("/customers", async (
     HttpContext http,
     CustomerDbContext db,
-    IEfCoreQueryProcessor processor,
+    IQueryProcessor processor,
     CancellationToken cancellationToken) =>
 {
     var request = http.Request.Query.ToDataScorpioQueryRequest();
-    var result = await processor.ExecuteAsync(db.Customers.AsNoTracking(), request, cancellationToken);
+    var result = processor.Execute(db.Customers.AsNoTracking(), request);
 
     return result.IsSuccess
         ? Results.Ok(result.Result)
@@ -374,7 +360,6 @@ Registration methods:
 | --- | --- |
 | `services.AddDataScorpio(...)` | `DataScorpio` |
 | `services.AddDataScorpioSieveCompatibility(...)` | `DataScorpio` |
-| `services.AddDataScorpioEntityFrameworkCore()` | `DataScorpio.EntityFrameworkCore` |
 | `query.ToDataScorpioQueryRequest()` | `DataScorpio.AspNetCore` |
 
 ## Sample

@@ -103,10 +103,9 @@ Owns:
 
 The core package should depend only on platform-level .NET abstractions.
 
-### Provider Packages
+### Integration Packages
 
 ```text
-DataScorpio.EntityFrameworkCore
 DataScorpio.AspNetCore
 DataScorpio.Testing
 ```
@@ -114,6 +113,7 @@ DataScorpio.Testing
 Potential future packages:
 
 ```text
+DataScorpio.Provider.EntityFrameworkCore
 DataScorpio.OctoMap
 DataScorpio.Crabalidator
 DataScorpio.CId
@@ -916,11 +916,11 @@ Exit criteria:
 - Existing Sieve-style TurtlePath filters and sorts work.
 - No TurtlePath dependency exists in core.
 
-## v0.7 - EF Core Adapter
+## Future - EF Core Adapter
 
 Goals:
 
-- Add `DataScorpio.EntityFrameworkCore`.
+- Add an EF Core integration package only if it provides clear value over core `IQueryable<T>` execution.
 - Add async count/list execution.
 - Validate provider-safe expressions.
 - Add optional no-tracking support.

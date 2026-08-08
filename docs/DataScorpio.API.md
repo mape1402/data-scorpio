@@ -5,7 +5,6 @@ This document should describe the public DataScorpio API as it is implemented.
 ## Packages
 
 - `DataScorpio`
-- `DataScorpio.EntityFrameworkCore`
 - `DataScorpio.AspNetCore`
 - `DataScorpio.Testing`
 
@@ -21,7 +20,6 @@ This document should describe the public DataScorpio API as it is implemented.
 - `QueryableQueryApplier` applies validated descriptors to `IQueryable<TEntity>`.
 - `QueryProcessor` parses, validates, applies, and returns `QueryExecutionResult<TEntity>`.
 - `AddDataScorpio(...)` registers core parser, validator, applier, registry, and processor services.
-- `AddDataScorpioEntityFrameworkCore(...)` registers EF Core async query execution.
 - `ToDataScorpioQueryRequest(...)` maps ASP.NET Core query collections to `QueryRequest`.
 - `QueryTestHost<TEntity>` and `QueryResultAssertions` support consumer tests.
 
@@ -47,10 +45,8 @@ var result = processor.Execute(customers.AsQueryable(), descriptor, profile);
 ```csharp
 services.AddDataScorpio(registry =>
 {
-    registry.AddProfile<CustomerQueryProfile, Customer>();
+    registry.AddProfile<CustomerQueryProfile>();
 });
-
-services.AddDataScorpioEntityFrameworkCore();
 ```
 
 ### Native JSON
