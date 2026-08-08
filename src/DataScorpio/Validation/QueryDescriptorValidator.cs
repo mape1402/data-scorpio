@@ -43,6 +43,9 @@ public sealed class QueryDescriptorValidator : IQueryDescriptorValidator
 
                 if (field == null)
                 {
+                    if (profile.FindCustomFilter(filter.Field) != null)
+                        continue;
+
                     errors.Add(Error(
                         QueryValidationCodes.UnknownField,
                         filter.Field,
@@ -86,6 +89,9 @@ public sealed class QueryDescriptorValidator : IQueryDescriptorValidator
 
             if (field == null)
             {
+                if (profile.FindCustomSort(sort.Field) != null)
+                    continue;
+
                 errors.Add(Error(
                     QueryValidationCodes.UnknownField,
                     sort.Field,

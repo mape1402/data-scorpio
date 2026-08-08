@@ -70,6 +70,36 @@ public interface IQueryProfileBuilder<TEntity>
     IQueryProfileBuilder<TEntity> AllowInclude(string name, Expression<Func<TEntity, object>> include);
 
     /// <summary>
+    /// Registers a custom filter by name.
+    /// </summary>
+    /// <param name="name">The public filter name.</param>
+    /// <param name="filter">The custom filter implementation.</param>
+    /// <returns>The same builder.</returns>
+    IQueryProfileBuilder<TEntity> CustomFilter(
+        string name,
+        Func<IQueryable<TEntity>, QueryValue, IQueryable<TEntity>> filter);
+
+    /// <summary>
+    /// Registers a custom filter by name with access to the full filter descriptor.
+    /// </summary>
+    /// <param name="name">The public filter name.</param>
+    /// <param name="filter">The custom filter implementation.</param>
+    /// <returns>The same builder.</returns>
+    IQueryProfileBuilder<TEntity> CustomFilterDescriptor(
+        string name,
+        Func<IQueryable<TEntity>, FilterDescriptor, IQueryable<TEntity>> filter);
+
+    /// <summary>
+    /// Registers a custom sort by name.
+    /// </summary>
+    /// <param name="name">The public sort name.</param>
+    /// <param name="sort">The custom sort implementation.</param>
+    /// <returns>The same builder.</returns>
+    IQueryProfileBuilder<TEntity> CustomSort(
+        string name,
+        Func<IQueryable<TEntity>, SortDirection, IQueryable<TEntity>> sort);
+
+    /// <summary>
     /// Sets the default sort using the member name as the public query name.
     /// </summary>
     /// <param name="field">The field expression.</param>

@@ -200,6 +200,34 @@ public sealed class QueryDescriptorValidatorTests
         Assert.Equal(QueryValidationCodes.MissingOperator, error.Code);
     }
 
+    [Fact]
+    public void Validate_accepts_custom_filter_and_sort_names()
+    {
+        var descriptor = new QueryDescriptor
+        {
+            FilterGroups =
+            [
+                new FilterGroupDescriptor
+                {
+                    Filters =
+                    [
+                        new FilterDescriptor
+                        {
+                            Field = "activeOnly",
+                            Operator = "equals",
+                            Value = QueryValue.From(true)
+                        }
+                    ]
+                }
+            ],
+            Sorts = [new SortDescriptor { Field = "newest", Direction = SortDirection.Descending }]
+        };
+
+        var result = validator.Validate(descriptor, profile);
+
+        Assert.True(result.IsValid);
+    }
+
     private sealed class CustomerQueryProfile : QueryProfile<Customer>
     {
         public override void Configure(IQueryProfileBuilder<Customer> builder)
@@ -210,6 +238,10 @@ public sealed class QueryDescriptorValidatorTests
                 .AllowFilter("status", customer => customer.Status)
                 .AllowSort("created", customer => customer.CreatedAt)
                 .AllowInclude("orders", customer => customer.Orders)
+                .CustomFilter("activeOnly", (query, value) => query.Where(customer => customer.Status == "Active"))
+                .CustomSort("newest", (query, direction) => direction == SortDirection.Descending
+                    ? query.OrderByDescending(customer => customer.CreatedAt)
+                    : query.OrderBy(customer => customer.CreatedAt))
                 .MaxPageSize(100);
         }
     }

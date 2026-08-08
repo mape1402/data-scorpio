@@ -12,6 +12,8 @@ public sealed class QueryProfileBuilder<TEntity> : IQueryProfileBuilder<TEntity>
 {
     private readonly Dictionary<string, QueryFieldDefinition> fields = new(StringComparer.OrdinalIgnoreCase);
     private readonly Dictionary<string, QueryIncludeDefinition> includes = new(StringComparer.OrdinalIgnoreCase);
+    private readonly Dictionary<string, QueryCustomFilterDefinition> customFilters = new(StringComparer.OrdinalIgnoreCase);
+    private readonly Dictionary<string, QueryCustomSortDefinition> customSorts = new(StringComparer.OrdinalIgnoreCase);
     private QuerySortDefinition defaultSort;
     private int? maxPageSize;
 
@@ -62,6 +64,51 @@ public sealed class QueryProfileBuilder<TEntity> : IQueryProfileBuilder<TEntity>
     }
 
     /// <inheritdoc/>
+    public IQueryProfileBuilder<TEntity> CustomFilter(
+        string name,
+        Func<IQueryable<TEntity>, QueryValue, IQueryable<TEntity>> filter)
+    {
+        if (filter == null)
+            throw new ArgumentNullException(nameof(filter));
+
+        return CustomFilterDescriptor(name, (query, descriptor) => filter(query, descriptor.Value));
+    }
+
+    /// <inheritdoc/>
+    public IQueryProfileBuilder<TEntity> CustomFilterDescriptor(
+        string name,
+        Func<IQueryable<TEntity>, FilterDescriptor, IQueryable<TEntity>> filter)
+    {
+        if (filter == null)
+            throw new ArgumentNullException(nameof(filter));
+
+        var normalizedName = NormalizeName(name);
+
+        customFilters[normalizedName] = new QueryCustomFilterDefinition(
+            normalizedName,
+            (source, descriptor) => filter((IQueryable<TEntity>)source, descriptor));
+
+        return this;
+    }
+
+    /// <inheritdoc/>
+    public IQueryProfileBuilder<TEntity> CustomSort(
+        string name,
+        Func<IQueryable<TEntity>, SortDirection, IQueryable<TEntity>> sort)
+    {
+        if (sort == null)
+            throw new ArgumentNullException(nameof(sort));
+
+        var normalizedName = NormalizeName(name);
+
+        customSorts[normalizedName] = new QueryCustomSortDefinition(
+            normalizedName,
+            (source, direction) => sort((IQueryable<TEntity>)source, direction));
+
+        return this;
+    }
+
+    /// <inheritdoc/>
     public IQueryProfileBuilder<TEntity> DefaultSort(
         Expression<Func<TEntity, object>> field,
         SortDirection direction = SortDirection.Ascending)
@@ -99,6 +146,8 @@ public sealed class QueryProfileBuilder<TEntity> : IQueryProfileBuilder<TEntity>
             typeof(TEntity),
             new ReadOnlyDictionary<string, QueryFieldDefinition>(new Dictionary<string, QueryFieldDefinition>(fields, fields.Comparer)),
             new ReadOnlyDictionary<string, QueryIncludeDefinition>(new Dictionary<string, QueryIncludeDefinition>(includes, includes.Comparer)),
+            new ReadOnlyDictionary<string, QueryCustomFilterDefinition>(new Dictionary<string, QueryCustomFilterDefinition>(customFilters, customFilters.Comparer)),
+            new ReadOnlyDictionary<string, QueryCustomSortDefinition>(new Dictionary<string, QueryCustomSortDefinition>(customSorts, customSorts.Comparer)),
             defaultSort,
             maxPageSize);
 

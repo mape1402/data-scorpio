@@ -115,6 +115,34 @@ public sealed class QueryableQueryApplierTests
     }
 
     [Fact]
+    public void Apply_applies_custom_filters_and_sorts()
+    {
+        var descriptor = new QueryDescriptor
+        {
+            FilterGroups =
+            [
+                new FilterGroupDescriptor
+                {
+                    Filters =
+                    [
+                        new FilterDescriptor
+                        {
+                            Field = "activeOnly",
+                            Operator = "equals",
+                            Value = QueryValue.From(true)
+                        }
+                    ]
+                }
+            ],
+            Sorts = [new SortDescriptor { Field = "newest", Direction = SortDirection.Descending }]
+        };
+
+        var results = Apply(descriptor).Select(customer => customer.Name).ToArray();
+
+        Assert.Equal(["Ada", "Grace"], results);
+    }
+
+    [Fact]
     public void Apply_supports_comparison_operators()
     {
         var descriptor = parser.Parse(new QueryRequest
@@ -174,6 +202,10 @@ public sealed class QueryableQueryApplierTests
                 .AllowSort(customer => customer.Status)
                 .AllowFilter(customer => customer.DeletedAt)
                 .AllowFilter(customer => customer.Score)
+                .CustomFilter("activeOnly", (query, value) => query.Where(customer => customer.Status == "Active"))
+                .CustomSort("newest", (query, direction) => direction == SortDirection.Descending
+                    ? query.OrderByDescending(customer => customer.CreatedAt)
+                    : query.OrderBy(customer => customer.CreatedAt))
                 .DefaultSort(customer => customer.CreatedAt);
         }
     }
