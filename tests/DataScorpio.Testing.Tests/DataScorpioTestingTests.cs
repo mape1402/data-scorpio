@@ -4,21 +4,21 @@ using DataScorpio.Profiles;
 using DataScorpio.Querying;
 using Microsoft.Extensions.DependencyInjection;
 
-public sealed class SieveTestingTests
+public sealed class DataScorpioTestingTests
 {
     [Fact]
-    public async Task AddSieveTesting_registers_async_sieve_testing_host()
+    public async Task AddDataScorpioTesting_registers_async_testing_host()
     {
         var services = new ServiceCollection();
 
-        services.AddSieveTesting(profiles => profiles.AddProfile<CustomerQueryProfile>());
+        services.AddDataScorpioTesting(profiles => profiles.AddProfile<CustomerQueryProfile>());
 
         using var provider = services.BuildServiceProvider();
-        var sieve = provider.GetRequiredService<ISieveTesting<Customer>>();
+        var dataScorpio = provider.GetRequiredService<IDataScorpioTesting<Customer>>();
 
-        await sieve.SeedAsync(Customers());
+        await dataScorpio.SeedAsync(Customers());
 
-        var result = await sieve.ApplyAsync(
+        var result = await dataScorpio.ApplyAsync(
             filters: "Name@=*a,IsActive==true",
             sorts: "Name",
             pageNumber: 1,
@@ -36,12 +36,12 @@ public sealed class SieveTestingTests
     {
         var services = new ServiceCollection();
 
-        services.AddSieveTesting(profiles => profiles.AddProfile<CustomerQueryProfile>());
+        services.AddDataScorpioTesting(profiles => profiles.AddProfile<CustomerQueryProfile>());
 
         using var provider = services.BuildServiceProvider();
-        var sieve = provider.GetRequiredService<ISieveTesting<Customer>>();
+        var dataScorpio = provider.GetRequiredService<IDataScorpioTesting<Customer>>();
 
-        var result = await sieve.ApplyAsync(
+        var result = await dataScorpio.ApplyAsync(
             Customers().AsQueryable(),
             filters: "IsActive==true",
             sorts: "-Name");
@@ -57,14 +57,14 @@ public sealed class SieveTestingTests
     {
         var services = new ServiceCollection();
 
-        services.AddSieveTesting(profiles => profiles.AddProfile<CustomerQueryProfile>());
+        services.AddDataScorpioTesting(profiles => profiles.AddProfile<CustomerQueryProfile>());
 
         using var provider = services.BuildServiceProvider();
-        var sieve = provider.GetRequiredService<ISieveTesting<Customer>>();
+        var dataScorpio = provider.GetRequiredService<IDataScorpioTesting<Customer>>();
 
-        await sieve.SeedAsync(Customers());
+        await dataScorpio.SeedAsync(Customers());
 
-        var result = await sieve.ApplyAsync(filters: "PasswordHash==secret");
+        var result = await dataScorpio.ApplyAsync(filters: "PasswordHash==secret");
 
         result.ShouldRejectWith(Validation.QueryValidationCodes.UnknownField);
     }
@@ -96,3 +96,4 @@ public sealed class SieveTestingTests
         public bool IsActive { get; init; }
     }
 }
+

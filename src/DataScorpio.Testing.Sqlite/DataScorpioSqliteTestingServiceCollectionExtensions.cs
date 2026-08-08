@@ -1,43 +1,43 @@
 namespace Microsoft.Extensions.DependencyInjection;
 
 using DataScorpio.Profiles;
-using DataScorpio.Testing;
+using DataScorpio.Testing.Sqlite;
 
 /// <summary>
-/// Registers Sieve-compatible testing helpers.
+/// Registers SQLite-backed DataScorpio testing helpers.
 /// </summary>
-public static class SieveTestingServiceCollectionExtensions
+public static class DataScorpioSqliteTestingServiceCollectionExtensions
 {
     /// <summary>
-    /// Registers Sieve-compatible testing helpers using already registered DataScorpio services.
+    /// Registers SQLite-backed DataScorpio testing helpers using already registered DataScorpio services.
     /// </summary>
     /// <param name="services">The service collection.</param>
     /// <returns>The same service collection.</returns>
-    public static IServiceCollection AddSieveTesting(this IServiceCollection services)
+    public static IServiceCollection AddDataScorpioSqliteTesting(this IServiceCollection services)
     {
         if (services == null)
             throw new ArgumentNullException(nameof(services));
 
-        services.AddScoped(typeof(ISieveTesting<>), typeof(SieveTesting<>));
+        services.AddScoped(typeof(IDataScorpioSqliteTesting<>), typeof(DataScorpioSqliteTesting<>));
 
         return services;
     }
 
     /// <summary>
-    /// Registers DataScorpio and Sieve-compatible testing helpers in one call.
+    /// Registers DataScorpio services and SQLite-backed testing helpers in one call.
     /// </summary>
     /// <param name="services">The service collection.</param>
     /// <param name="configureProfiles">The profile registry configuration.</param>
     /// <returns>The same service collection.</returns>
-    public static IServiceCollection AddSieveTesting(
+    public static IServiceCollection AddDataScorpioSqliteTesting(
         this IServiceCollection services,
         Action<QueryProfileRegistryBuilder> configureProfiles)
     {
         if (services == null)
             throw new ArgumentNullException(nameof(services));
 
-        services.AddDataScorpio(configureProfiles);
-        services.AddSieveTesting();
+        services.AddDataScorpioTesting(configureProfiles);
+        services.AddDataScorpioSqliteTesting();
 
         return services;
     }

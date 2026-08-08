@@ -26,4 +26,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Allowlisted include metadata, validation, and JSON parsing.
 - End-to-end query processor and dependency injection registration.
 - DataScorpio testing helper package.
+- SQLite-backed testing helper package.
 - TurtlePath integration direction documented as TurtlePath-owned, with DataScorpio exposing reusable core APIs.
