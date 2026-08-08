@@ -25,6 +25,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Configured multi-field search execution.
 - Allowlisted include metadata, validation, and JSON parsing.
 - End-to-end query processor and dependency injection registration.
-- ASP.NET Core query collection binding package.
 - DataScorpio testing helper package.
 - TurtlePath integration direction documented as TurtlePath-owned, with DataScorpio exposing reusable core APIs.

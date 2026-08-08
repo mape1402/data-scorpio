@@ -3,12 +3,10 @@
     <Project Path="samples/DataScorpio.Samples.Basic/DataScorpio.Samples.Basic.csproj" />
   </Folder>
   <Folder Name="/src/">
-    <Project Path="src/DataScorpio.AspNetCore/DataScorpio.AspNetCore.csproj" />
     <Project Path="src/DataScorpio.Testing/DataScorpio.Testing.csproj" />
     <Project Path="src/DataScorpio/DataScorpio.csproj" />
   </Folder>
   <Folder Name="/tests/">
-    <Project Path="tests/DataScorpio.AspNetCore.Tests/DataScorpio.AspNetCore.Tests.csproj" />
     <Project Path="tests/DataScorpio.Testing.Tests/DataScorpio.Testing.Tests.csproj" />
     <Project Path="tests/DataScorpio.Tests/DataScorpio.Tests.csproj" />
   </Folder>

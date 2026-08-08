@@ -106,7 +106,6 @@ The core package should depend only on platform-level .NET abstractions.
 ### Integration Packages
 
 ```text
-DataScorpio.AspNetCore
 DataScorpio.Testing
 ```
 
@@ -931,11 +930,11 @@ Exit criteria:
 - EF adapter can execute `QueryRequest` to `QueryResult<T>`.
 - No supported operator causes unintended client-side evaluation.
 
-## v0.8 - ASP.NET Core Adapter
+## Future - ASP.NET Core Adapter
 
 Goals:
 
-- Add `DataScorpio.AspNetCore`.
+- Add an ASP.NET Core adapter only if it provides clear value over constructing `QueryRequest` directly.
 - Bind query parameters to `QueryRequest`.
 - Support naming conventions.
 - Convert validation diagnostics to HTTP-friendly error shapes.
@@ -979,7 +978,7 @@ Scope:
 - Sieve compatibility mode.
 - TurtlePath-owned integration support.
 - EF Core adapter.
-- ASP.NET Core adapter.
+- Optional ASP.NET Core adapter.
 - Testing package.
 
 Exit criteria:
@@ -1161,7 +1160,6 @@ Completed in the first implementation pass:
 - Include descriptors, profile allowlists, JSON parsing, validation, and EF Core include execution.
 - End-to-end core query processor and dependency injection registration.
 - EF Core async query processor package.
-- ASP.NET Core query binding package.
 - TurtlePath-ready core APIs without a DataScorpio-owned TurtlePath dependency.
 - Testing helper package.
 - Separate DynaBee acceleration package boundary.
