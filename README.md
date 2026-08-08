@@ -4,26 +4,32 @@
 [![NuGet](https://img.shields.io/nuget/v/DataScorpio.svg)](https://www.nuget.org/packages/DataScorpio)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-**DataScorpio** is a typed query engine for .NET. It turns incoming query input into validated, provider-friendly operations over `IQueryable<T>`.
+**DataScorpio** is a typed query engine for .NET APIs. It parses incoming query input, validates it against an explicit profile, and applies provider-friendly filtering, sorting, search, and paging over `IQueryable<T>`.
 
-Use it when an API needs safe filtering, sorting, paging, search, includes, diagnostics, and a migration path from Sieve-style query strings.
+It is designed for APIs that need a simple string query model today, a structured JSON query model when the client grows, and a testing layer that can validate behavior against LINQ-to-Objects or SQLite.
 
-## Install
+## Packages
 
 ```bash
 dotnet add package DataScorpio
 ```
 
-Optional packages:
+Optional testing packages:
 
 ```bash
 dotnet add package DataScorpio.Testing
 dotnet add package DataScorpio.Testing.Sqlite
 ```
 
+| Package | Purpose |
+| --- | --- |
+| `DataScorpio` | Core query profiles, parsing, validation, execution, and DI registration. |
+| `DataScorpio.Testing` | In-memory test host, async testing service, and query assertions. |
+| `DataScorpio.Testing.Sqlite` | SQLite-backed testing service for provider translation checks. |
+
 ## Getting Started
 
-Create a query profile. Profiles are allowlists: fields are not queryable unless you expose them.
+Create a profile for the entity you want to query. By default, nothing is queryable until the profile exposes it.
 
 ```csharp
 using DataScorpio.Profiles;
@@ -36,8 +42,11 @@ public sealed class CustomerQueryProfile : QueryProfile<Customer>
         builder
             .AllowFilter(customer => customer.Name)
             .AllowFilter(customer => customer.Status)
+            .AllowFilter(customer => customer.CreatedAt)
             .AllowSearch(customer => customer.Name)
+            .AllowSearch(customer => customer.Email)
             .AllowSearch(customer => customer.Region)
+            .AllowSort(customer => customer.Name)
             .AllowSort(customer => customer.CreatedAt)
             .DefaultSort(customer => customer.CreatedAt, SortDirection.Descending)
             .MaxPageSize(100);
@@ -45,22 +54,18 @@ public sealed class CustomerQueryProfile : QueryProfile<Customer>
 }
 ```
 
-Aliases are optional:
-
-```csharp
-builder.AllowFilter("customerName", customer => customer.Name);
-```
-
 Register DataScorpio once:
 
 ```csharp
+using DataScorpio.DependencyInjection;
+
 services.AddDataScorpio(profiles =>
 {
     profiles.AddProfile<CustomerQueryProfile>();
 });
 ```
 
-Execute queries through the processor. DataScorpio works over `IQueryable<T>`, so the source can come from EF Core, another ORM, or an in-memory query.
+Execute against any `IQueryable<T>`:
 
 ```csharp
 using DataScorpio.Execution;
@@ -75,16 +80,30 @@ var result = processor.Execute(customers.AsQueryable(), new QueryRequest
     PageSize = 25
 });
 
-if (result.IsSuccess)
+if (!result.IsSuccess)
+    return Results.BadRequest(result.Validation);
+
+return Results.Ok(result.Result);
+```
+
+`IQueryProcessor` returns a `QueryExecutionResult<T>`. Successful executions contain a `QueryResult<T>` with items and paging metadata.
+
+## QueryRequest
+
+`QueryRequest` is the string-first request model:
+
+```csharp
+public sealed class QueryRequest
 {
-    foreach (var customer in result.Result.Items)
-        Console.WriteLine(customer.Name);
+    public string Filters { get; init; }
+    public string Sorts { get; init; }
+    public string Search { get; init; }
+    public int? PageNumber { get; init; }
+    public int? PageSize { get; init; }
 }
 ```
 
-## Query Strings
-
-DataScorpio supports Sieve-compatible string input through `QueryRequest`.
+Example query:
 
 ```csharp
 var request = new QueryRequest
@@ -97,31 +116,77 @@ var request = new QueryRequest
 };
 ```
 
-Common filter operators:
+## String Filtering
 
-| Operator | Meaning |
-| --- | --- |
-| `==` | equals |
-| `!=` | not equals |
-| `>` | greater than |
-| `>=` | greater than or equal |
-| `<` | less than |
-| `<=` | less than or equal |
-| `@=` | contains |
-| `@=*` | contains, case-insensitive |
-| `_=` | starts with |
-| `_-=` | ends with |
+DataScorpio supports a Sieve-compatible filter and sort string parser.
 
-OR syntax is also supported:
+Common filter examples:
 
 ```text
+Status==Active
+Status!=Inactive
+CreatedAt>=2026-01-01
+Name@=*ada
 (Name|Email)@=*ada
 Status==Active|Pending
+DeletedAt==null
 ```
+
+Supported operators:
+
+| Operator | Normalized name | Meaning |
+| --- | --- | --- |
+| `==` | `equals` | Equals. |
+| `==*` | `equalsInsensitive` | Equals, case-insensitive. |
+| `!=` | `notEquals` | Not equals. |
+| `!=*` | `notEqualsInsensitive` | Not equals, case-insensitive. |
+| `>` | `greaterThan` | Greater than. |
+| `>=` | `greaterThanOrEqual` | Greater than or equal. |
+| `<` | `lessThan` | Less than. |
+| `<=` | `lessThanOrEqual` | Less than or equal. |
+| `@=` | `contains` | String contains. |
+| `@=*` | `containsInsensitive` | String contains, case-insensitive. |
+| `!@=` | `notContains` | String does not contain. |
+| `!@=*` | `notContainsInsensitive` | String does not contain, case-insensitive. |
+| `_=` | `startsWith` | String starts with. |
+| `_=*` | `startsWithInsensitive` | String starts with, case-insensitive. |
+| `!_=` | `notStartsWith` | String does not start with. |
+| `!_=*` | `notStartsWithInsensitive` | String does not start with, case-insensitive. |
+| `_-=` | `endsWith` | String ends with. |
+| `_-=*` | `endsWithInsensitive` | String ends with, case-insensitive. |
+| `!_-=` | `notEndsWith` | String does not end with. |
+| `!_-=*` | `notEndsWithInsensitive` | String does not end with, case-insensitive. |
+
+Sorts use comma-separated field names. Prefix a field with `-` for descending order:
+
+```text
+Name
+-CreatedAt,Name
+```
+
+## Filters And Search
+
+Filters are field-specific predicates:
+
+```text
+Status==Active
+CreatedAt>=2026-01-01
+```
+
+Search is one free-text term applied across the fields marked with `AllowSearch(...)`:
+
+```csharp
+var request = new QueryRequest
+{
+    Search = "north"
+};
+```
+
+Use filters when the client knows the field and operator. Use search when the client has a general term and wants "find this across the searchable text fields".
 
 ## Native JSON
 
-Use `IJsonQueryDescriptorParser` when your API accepts structured JSON instead of query strings.
+Use `IJsonQueryDescriptorParser` when your API accepts structured JSON instead of strings.
 
 ```csharp
 using DataScorpio.Parsing.Json;
@@ -131,15 +196,17 @@ var jsonParser = serviceProvider.GetRequiredService<IJsonQueryDescriptorParser>(
 var descriptor = jsonParser.Parse("""
 {
   "filters": [
-    { "field": "Status", "operator": "equals", "value": "Active" }
+    { "field": "Status", "operator": "equals", "value": "Active" },
+    { "field": "DeletedAt", "operator": "equals", "value": null }
   ],
   "sorts": [
     { "field": "CreatedAt", "direction": "desc" }
   ],
   "search": {
     "term": "north",
-    "fields": [ "Region" ]
+    "fields": [ "Name", "Email", "Region" ]
   },
+  "includes": [ "orders" ],
   "page": {
     "pageNumber": 1,
     "pageSize": 25
@@ -150,58 +217,64 @@ var descriptor = jsonParser.Parse("""
 var result = processor.Execute(customers.AsQueryable(), descriptor);
 ```
 
-JSON `null` is treated as an explicit null query value:
+JSON supports:
+
+| Property | Purpose |
+| --- | --- |
+| `filters` | A default `and` group of filters. |
+| `filterGroups` | Explicit `and` or `or` groups. |
+| `sorts` | Ordered sort descriptors. |
+| `search` | Free-text search term and optional fields. |
+| `includes` | Include names or objects with a `name` property. |
+| `page` | `pageNumber` and `pageSize`. |
+| `presets` | Parsed preset descriptors for higher-level adapters. |
+
+JSON `null` is represented as an explicit null value. String input uses `null`:
+
+```text
+DeletedAt==null
+```
 
 ```json
-{ "field": "deletedAt", "operator": "equals", "value": null }
+{ "field": "DeletedAt", "operator": "equals", "value": null }
 ```
 
-## Entity Framework Core
+## Profiles And Aliases
 
-DataScorpio's core query applier already works on EF Core because EF exposes `IQueryable<T>`.
-
-Register:
+The default public query name is the property name from the expression:
 
 ```csharp
-services.AddDataScorpio(profiles =>
-{
-    profiles.AddProfile<CustomerQueryProfile>();
-});
+builder
+    .AllowFilter(customer => customer.Name)
+    .AllowSort(customer => customer.CreatedAt);
 ```
 
-Execute over a `DbSet<T>` or any EF `IQueryable<T>`:
+Aliases are optional and useful when the public API name should differ from the CLR property:
 
 ```csharp
-using DataScorpio.Execution;
-
-var result = processor.Execute(
-    dbContext.Customers.AsNoTracking(),
-    new QueryRequest
-    {
-        Filters = "Status==Active",
-        Sorts = "-CreatedAt",
-        PageNumber = 1,
-        PageSize = 25
-    });
+builder
+    .AllowFilter("customerName", customer => customer.Name)
+    .AllowSort("created", customer => customer.CreatedAt);
 ```
 
-Includes are deny-by-default and must be configured in the profile:
+Then clients can query:
+
+```text
+customerName@=*ada
+-created
+```
+
+Includes are also explicit:
 
 ```csharp
 builder.AllowInclude("orders", customer => customer.Orders);
 ```
 
-Then request them through native descriptors:
-
-```json
-{
-  "includes": [ "orders" ]
-}
-```
+The core package parses and validates include names. Provider-specific include execution should live in the application or in an adapter.
 
 ## Custom Filters And Sorts
 
-Use custom filters when a query name does not map cleanly to one property.
+Use a custom filter when the query name is a business concept instead of a single property.
 
 ```csharp
 public sealed class CustomerQueryProfile : QueryProfile<Customer>
@@ -210,10 +283,11 @@ public sealed class CustomerQueryProfile : QueryProfile<Customer>
     {
         builder
             .AllowFilter(customer => customer.Name)
-            .AllowFilter(customer => customer.Status)
             .AllowSort(customer => customer.CreatedAt)
             .CustomFilter("InRegion", (query, value) =>
                 query.Where(customer => customer.Region == Convert.ToString(value.Value)))
+            .CustomFilterDescriptor("CreatedWindow", (query, filter) =>
+                query.Where(customer => customer.CreatedAt >= DateTime.UtcNow.AddDays(-30)))
             .CustomSort("RecentlyCreated", (query, direction) =>
                 direction == SortDirection.Descending
                     ? query.OrderByDescending(customer => customer.CreatedAt)
@@ -222,7 +296,7 @@ public sealed class CustomerQueryProfile : QueryProfile<Customer>
 }
 ```
 
-Then call it from query strings through the processor:
+Usage:
 
 ```csharp
 var result = processor.Execute(customers.AsQueryable(), new QueryRequest
@@ -232,10 +306,11 @@ var result = processor.Execute(customers.AsQueryable(), new QueryRequest
 });
 ```
 
-Custom filters and sorts receive `IQueryable<T>`, so they can stay provider-friendly when you write provider-translatable LINQ.
-Use `CustomFilterDescriptor` when the custom filter needs the full operator/value descriptor.
+Custom filters and sorts receive `IQueryable<T>`, so they can stay provider-friendly when the LINQ you write can be translated by the underlying provider.
 
-Reusable custom filters and sorts can target a base class or interface contract. Put them in a convention set:
+## Reusable Conventions
+
+When the same custom query applies to every entity that implements a base class or interface, put it in a convention set and register it once.
 
 ```csharp
 public interface ITenantScoped
@@ -243,7 +318,7 @@ public interface ITenantScoped
     string TenantId { get; }
 }
 
-public interface ICreated
+public interface ICreatedEntity
 {
     DateTime CreatedAt { get; }
 }
@@ -255,12 +330,12 @@ public sealed class AppQueryConventions : QueryConventionSet
         builder
             .CustomFilter<ITenantScoped>("ForTenant", value =>
                 entity => entity.TenantId == Convert.ToString(value.Value))
-            .CustomSort<ICreated>("RecentlyCreated", entity => entity.CreatedAt);
+            .CustomSort<ICreatedEntity>("RecentlyCreated", entity => entity.CreatedAt);
     }
 }
 ```
 
-Then register the convention set once:
+Register conventions once:
 
 ```csharp
 services.AddDataScorpio(profiles => profiles
@@ -269,25 +344,50 @@ services.AddDataScorpio(profiles => profiles
     .AddProfile<OrderQueryProfile>());
 ```
 
-Every profile whose entity implements a matching contract receives those custom query names automatically.
+Any registered profile whose entity implements the matching contract receives those custom query names automatically.
+
+## Results And Validation
+
+Invalid queries are rejected before execution. Unknown fields, non-filterable fields, non-sortable fields, unknown includes, invalid page numbers, invalid page sizes, and page sizes above `MaxPageSize(...)` produce validation errors.
 
 ```csharp
-builder
-    .AllowFilter(customer => customer.Name)
-    .AllowSort(customer => customer.CreatedAt);
+var result = processor.Execute(customers.AsQueryable(), new QueryRequest
+{
+    Filters = "SecretInternalField==true"
+});
+
+if (!result.IsSuccess)
+{
+    foreach (var error in result.Validation.Errors)
+        Console.WriteLine($"{error.Code}: {error.Message}");
+}
 ```
 
-## ASP.NET Core
+`QueryResult<T>` mirrors the paging names commonly used by TurtlePath responses:
+
+| Property | Alias |
+| --- | --- |
+| `Items` | `Results` |
+| `PageNumber` | `CurrentPage` |
+| `RowCount` | `TotalRows` |
+| `PageCount` | `TotalPages` |
+| `PageSize` | |
+| `HasPreviousPage` | |
+| `HasNextPage` | |
+
+## ASP.NET Core Usage
+
+DataScorpio does not require an ASP.NET Core package. Build a `QueryRequest` from query parameters and pass your `IQueryable<T>` to `IQueryProcessor`.
 
 ```csharp
 using DataScorpio.Execution;
 using DataScorpio.Querying;
+using Microsoft.EntityFrameworkCore;
 
-app.MapGet("/customers", async (
+app.MapGet("/customers", (
     HttpContext http,
     CustomerDbContext db,
-    IQueryProcessor processor,
-    CancellationToken cancellationToken) =>
+    IQueryProcessor processor) =>
 {
     var request = new QueryRequest
     {
@@ -306,38 +406,42 @@ app.MapGet("/customers", async (
 });
 ```
 
-Supported query keys:
+Example URL:
 
 ```text
-?filters=Status==Active&sorts=-CreatedAt&pageNumber=1&pageSize=25&search=ada
+/customers?filters=Status==Active&sorts=-CreatedAt&pageNumber=1&pageSize=25&search=ada
 ```
+
+## IQueryable Providers
+
+The core package applies queries to `IQueryable<T>`. That means it can run over EF Core, another ORM that exposes `IQueryable<T>`, or in-memory data.
+
+DataScorpio does not ship separate EF Core, ASP.NET Core, or DynaBee packages. The core `IQueryable<T>` pipeline is the integration point.
 
 ## Testing
 
-Install:
-
-```bash
-dotnet add package DataScorpio.Testing
-```
-
-Use `QueryTestHost<T>` and assertions to test profile behavior without a database:
+Use `DataScorpio.Testing` to validate filters, sorts, paging, validation errors, and profile behavior without depending on your application host.
 
 ```csharp
 using DataScorpio.Testing;
 
 var host = new QueryTestHost<Customer>(new CustomerQueryProfile())
     .WithSeed(
-        new Customer("Ada", "Active"),
-        new Customer("Grace", "Inactive"));
+        new Customer { Name = "Ada", Status = "Active" },
+        new Customer { Name = "Grace", Status = "Inactive" });
 
-host.Apply(filters: "Status==Active")
+host.Apply(filters: "Status==Active", sorts: "Name", pageNumber: 1, pageSize: 10)
     .ShouldBeSuccessful()
-    .ShouldContainOnly(customer => customer.Name == "Ada");
+    .ShouldBeSortedBy(customer => customer.Name)
+    .ShouldContainOnly(customer => customer.Status == "Active")
+    .ShouldHavePage(pageNumber: 1, pageSize: 10, totalRows: 1);
 ```
 
-For DataScorpio testing through DI:
+DI-based testing:
 
 ```csharp
+using DataScorpio.Testing;
+
 services.AddDataScorpioTesting(profiles =>
     profiles.AddProfile<CustomerQueryProfile>());
 
@@ -352,14 +456,16 @@ var result = await dataScorpio.ApplyAsync(
     pageSize: 10);
 
 result
+    .ShouldBeSuccessful()
     .ShouldBeSortedBy(customer => customer.Name)
-    .ShouldContainOnly(customer => customer.IsActive)
-    .ShouldHavePage(pageNumber: 1, pageSize: 10, totalRows: 25);
+    .ShouldContainOnly(customer => customer.Name.Contains("Ada", StringComparison.OrdinalIgnoreCase));
 ```
 
-Use `DataScorpio.Testing.Sqlite` when a test should run against SQLite instead of LINQ-to-Objects:
+SQLite-backed testing:
 
 ```csharp
+using DataScorpio.Testing.Sqlite;
+
 services.AddDataScorpioSqliteTesting(profiles =>
     profiles.AddProfile<CustomerQueryProfile>());
 
@@ -370,40 +476,64 @@ await dataScorpio.SeedAsync(customers);
 var result = await dataScorpio.ApplyAsync(
     filters: "Name@=*ada",
     sorts: "Name");
+
+result.ShouldBeSuccessful();
 ```
+
+SQLite testing is useful when you want a more realistic query provider than LINQ-to-Objects. The entity must be suitable for EF Core SQLite mapping, such as having a key.
+
+Available assertions:
+
+| Assertion | Purpose |
+| --- | --- |
+| `ShouldBeSuccessful()` | Requires a successful query. |
+| `ShouldBeRejected()` | Requires a rejected query. |
+| `ShouldRejectWith(code)` | Requires a validation error code. |
+| `ShouldContainOnly(predicate)` | Requires every result item to match a predicate. |
+| `ShouldBeSortedBy(selector, descending: false)` | Requires result order to match a selector. |
+| `ShouldHavePage(pageNumber, pageSize, totalRows)` | Requires paging metadata to match. |
 
 ## API Surface
 
-Core package:
+Core:
 
 | Type | Purpose |
 | --- | --- |
-| `QueryRequest` | Raw string-first request model for filters, sorts, search, and paging. |
-| `QueryDescriptor` | Parsed native query model. |
-| `FilterDescriptor`, `SortDescriptor`, `SearchDescriptor`, `PageDescriptor`, `IncludeDescriptor` | Query descriptor building blocks. |
-| `QueryValue` | Represents parsed values, explicit null, and missing values. |
+| `QueryRequest` | String-first request model for filters, sorts, search, and paging. |
+| `QueryDescriptor` | Native parsed query model. |
+| `FilterDescriptor`, `FilterGroupDescriptor` | Field, operator, value, and grouping model for filters. |
+| `SortDescriptor` | Field and direction model for sorting. |
+| `SearchDescriptor` | Free-text search descriptor. |
+| `IncludeDescriptor` | Include request descriptor. |
+| `QueryPresetDescriptor` | Parsed preset descriptor for higher-level adapters. |
+| `PageDescriptor` | Page number and page size descriptor. |
+| `QueryValue` | Parsed value wrapper for normal values, explicit null, and missing values. |
 | `QueryProfile<TEntity>` | Base class for typed query profiles. |
-| `IQueryProfileBuilder<TEntity>` | Fluent allowlist configuration API. |
-| `IQueryParser` / `SieveQueryParser` | Sieve-compatible string parser. |
+| `IQueryProfileBuilder<TEntity>` | Fluent API for allowlists, aliases, defaults, includes, and custom queries. |
+| `QueryConventionSet` | Reusable cross-profile custom filters and sorts. |
+| `IQueryParser` / `SieveQueryParser` | String parser compatible with Sieve-style filter and sort syntax. |
 | `IJsonQueryDescriptorParser` / `JsonQueryDescriptorParser` | Native JSON descriptor parser. |
-| `IQueryDescriptorValidator` | Validates descriptors against profiles. |
-| `IQueryableQueryApplier` | Applies descriptors to `IQueryable<T>`. |
+| `IQueryDescriptorValidator` | Validates descriptors against a profile before execution. |
+| `IQueryableQueryApplier` | Applies validated descriptors to `IQueryable<T>`. |
 | `IQueryProcessor` | Parses, validates, applies, counts, pages, and returns results. |
 | `QueryExecutionResult<T>` | Success or rejected result with validation diagnostics. |
 | `QueryResult<T>` | Items and paging metadata. |
 
-Registration methods:
+Registration:
 
 | Method | Package |
 | --- | --- |
 | `services.AddDataScorpio(...)` | `DataScorpio` |
 | `services.AddDataScorpioSieveCompatibility(...)` | `DataScorpio` |
+| `services.AddDataScorpioTesting(...)` | `DataScorpio.Testing` |
+| `services.AddDataScorpioSqliteTesting(...)` | `DataScorpio.Testing.Sqlite` |
 
 ## Sample
 
-Run the basic in-memory sample:
+Run the expanded sample:
 
 ```bash
 dotnet run --project samples/DataScorpio.Samples.Basic/DataScorpio.Samples.Basic.csproj
 ```
 
+The sample includes basic filtering, sorting, paging, search, OR filters, aliases, custom conventions, null filters, native JSON, and validation scenarios.
