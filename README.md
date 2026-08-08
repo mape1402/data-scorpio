@@ -20,7 +20,6 @@ Optional packages:
 dotnet add package DataScorpio.EntityFrameworkCore
 dotnet add package DataScorpio.AspNetCore
 dotnet add package DataScorpio.Testing
-dotnet add package DataScorpio.DynaBee
 ```
 
 ## Getting Started
@@ -349,18 +348,6 @@ host.Apply(new QueryRequest { Filters = "Status==Active" })
     .ShouldContainOnly(customer => customer.Name == "Ada");
 ```
 
-## DynaBee
-
-`DataScorpio.DynaBee` is an opt-in acceleration boundary for future generated metadata and fast paths.
-
-```bash
-dotnet add package DataScorpio.DynaBee
-```
-
-```csharp
-services.AddDataScorpioDynaBee();
-```
-
 ## API Surface
 
 Core package:
@@ -389,7 +376,6 @@ Registration methods:
 | `services.AddDataScorpioSieveCompatibility(...)` | `DataScorpio` |
 | `services.AddDataScorpioEntityFrameworkCore()` | `DataScorpio.EntityFrameworkCore` |
 | `query.ToDataScorpioQueryRequest()` | `DataScorpio.AspNetCore` |
-| `services.AddDataScorpioDynaBee()` | `DataScorpio.DynaBee` |
 
 ## Sample
 

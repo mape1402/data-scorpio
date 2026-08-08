@@ -1075,7 +1075,7 @@ Potential scope:
 - Sieve compatibility should not be enabled by default in the TurtlePath adapter.
 - TurtlePath should use strict mode for invalid Sieve-compatible queries in new DataScorpio integrations.
 - DataScorpio should mirror TurtlePath's full `PagedResponse<T>` shape for smoother migration.
-- DynaBee acceleration should live in a separate `DataScorpio.DynaBee` package so the core remains dependency-clean.
+- DynaBee acceleration should be revisited only when generated metadata or fast-path services are ready.
 
 ## Null Value Decision
 
@@ -1137,7 +1137,7 @@ Projection should follow search once the query descriptor, validation, filtering
 
 - Should strict mode be the global default for all adapters or only for TurtlePath?
 - Should native string syntax copy Sieve operators, use readable words, or support both?
-- Should `DataScorpio.DynaBee` be opt-in globally or opt-in per profile/provider?
+- Should future DynaBee acceleration be opt-in globally or opt-in per profile/provider?
 
 ## Immediate Next Steps
 
@@ -1145,7 +1145,7 @@ Projection should follow search once the query descriptor, validation, filtering
 2. Add specification/preset execution beyond descriptor storage.
 3. Add contextual scopes for authorization, multi-tenancy, and soft delete.
 4. Add descriptor/profile/expression caching and benchmarking.
-5. Replace the current DynaBee marker boundary with generated metadata and fast-path services.
+5. Design real generated metadata and fast-path services before adding any DynaBee package.
 
 ## Current Implementation Snapshot
 
