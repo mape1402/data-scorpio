@@ -329,9 +329,31 @@ var host = new QueryTestHost<Customer>(new CustomerQueryProfile())
         new Customer("Ada", "Active"),
         new Customer("Grace", "Inactive"));
 
-host.Apply(new QueryRequest { Filters = "Status==Active" })
+host.Apply(filters: "Status==Active")
     .ShouldBeSuccessful()
     .ShouldContainOnly(customer => customer.Name == "Ada");
+```
+
+For Sieve-compatible testing through DI:
+
+```csharp
+services.AddSieveTesting(profiles =>
+    profiles.AddProfile<CustomerQueryProfile>());
+
+var sieve = provider.GetRequiredService<ISieveTesting<Customer>>();
+
+await sieve.SeedAsync(customers);
+
+var result = await sieve.ApplyAsync(
+    filters: "Name@=*ada",
+    sorts: "Name",
+    pageNumber: 1,
+    pageSize: 10);
+
+result
+    .ShouldBeSortedBy(customer => customer.Name)
+    .ShouldContainOnly(customer => customer.IsActive)
+    .ShouldHavePage(pageNumber: 1, pageSize: 10, totalRows: 25);
 ```
 
 ## API Surface

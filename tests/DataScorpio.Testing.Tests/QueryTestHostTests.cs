@@ -15,7 +15,7 @@ public sealed class QueryTestHostTests
         result
             .ShouldBeSuccessful()
             .ShouldContainOnly(customer => customer.Status == "Active")
-            .ShouldHavePage(pageNumber: 1, pageSize: 1, rowCount: 2);
+            .ShouldHavePage(pageNumber: 1, pageSize: 1, totalRows: 2);
 
         Assert.Equal("Ada", Assert.Single(result.Result.Items).Name);
     }
