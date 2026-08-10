@@ -1,7 +1,7 @@
 namespace DataScorpio.Samples.Basic.DependencyInjection;
 
+using DataScorpio.Samples.Basic;
 using DataScorpio.Samples.Basic.Output;
-using DataScorpio.Samples.Basic.Querying;
 using DataScorpio.Samples.Basic.Scenarios;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -11,9 +11,7 @@ internal static class SampleServices
     {
         var services = new ServiceCollection();
 
-        services.AddDataScorpio(profiles => profiles
-            .AddConventions<SampleQueryConventions>()
-            .AddProfile<CustomerQueryProfile>());
+        services.AddDataScorpio(options => options.FromAssemblyOf<SampleAssemblyMarker>());
 
         services.AddSingleton<ConsoleResultWriter>();
         services.AddSingleton<IQueryScenario, BasicFilteringScenario>();

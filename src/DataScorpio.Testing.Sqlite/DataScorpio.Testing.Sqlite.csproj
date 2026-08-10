@@ -1,7 +1,10 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
+    <IsPackable>true</IsPackable>
     <PackageId>DataScorpio.Testing.Sqlite</PackageId>
-    <Description>SQLite-backed testing helpers for DataScorpio query profiles and requests.</Description>
+    <Title>DataScorpio Testing SQLite</Title>
+    <Description>SQLite-backed testing helpers for DataScorpio query profiles and provider translation behavior using EF Core SQLite.</Description>
+    <PackageTags>query;filtering;sorting;paging;search;iqueryable;sieve;testing;sqlite;efcore</PackageTags>
   </PropertyGroup>
 
   <ItemGroup>

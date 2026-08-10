@@ -1,6 +1,6 @@
 # DataScorpio
 
-[![Build](https://github.com/mape1402/data-scorpio/actions/workflows/CI.yml/badge.svg)](https://github.com/mape1402/data-scorpio/actions/workflows/CI.yml)
+[![Build](https://github.com/mape1402/data-scorpio/actions/workflows/build-and-release.yml/badge.svg)](https://github.com/mape1402/data-scorpio/actions/workflows/build-and-release.yml)
 [![NuGet](https://img.shields.io/nuget/v/DataScorpio.svg)](https://www.nuget.org/packages/DataScorpio)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
@@ -54,15 +54,25 @@ public sealed class CustomerQueryProfile : QueryProfile<Customer>
 }
 ```
 
-Register DataScorpio once:
+Register DataScorpio once. The simplest path is assembly discovery:
 
 ```csharp
 using DataScorpio.DependencyInjection;
 
-services.AddDataScorpio(profiles =>
+services.AddDataScorpio(options =>
 {
-    profiles.AddProfile<CustomerQueryProfile>();
+    options.FromAssemblies(typeof(CustomerQueryProfile).Assembly);
 });
+```
+
+This discovers concrete `QueryProfile<TEntity>` and `QueryConventionSet` types with parameterless constructors from the selected assemblies.
+
+You can still register explicitly when you want full control:
+
+```csharp
+services.AddDataScorpio(profiles => profiles
+    .AddConventions<AppQueryConventions>()
+    .AddProfile<CustomerQueryProfile>());
 ```
 
 Execute against any `IQueryable<T>`:
@@ -335,7 +345,16 @@ public sealed class AppQueryConventions : QueryConventionSet
 }
 ```
 
-Register conventions once:
+With assembly discovery, convention sets are picked up automatically with profiles:
+
+```csharp
+services.AddDataScorpio(options =>
+{
+    options.FromAssemblies(typeof(AppQueryConventions).Assembly);
+});
+```
+
+You can also register conventions explicitly:
 
 ```csharp
 services.AddDataScorpio(profiles => profiles
@@ -511,6 +530,7 @@ Core:
 | `QueryProfile<TEntity>` | Base class for typed query profiles. |
 | `IQueryProfileBuilder<TEntity>` | Fluent API for allowlists, aliases, defaults, includes, and custom queries. |
 | `QueryConventionSet` | Reusable cross-profile custom filters and sorts. |
+| `QueryProfileRegistryBuilder` | Manual and assembly-discovery registration API for profiles and conventions. |
 | `IQueryParser` / `SieveQueryParser` | String parser compatible with Sieve-style filter and sort syntax. |
 | `IJsonQueryDescriptorParser` / `JsonQueryDescriptorParser` | Native JSON descriptor parser. |
 | `IQueryDescriptorValidator` | Validates descriptors against a profile before execution. |
@@ -524,6 +544,9 @@ Registration:
 | Method | Package |
 | --- | --- |
 | `services.AddDataScorpio(...)` | `DataScorpio` |
+| `options.FromAssemblies(...)` | `DataScorpio` |
+| `options.FromAssembly(...)` | `DataScorpio` |
+| `options.FromAssemblyOf<TMarker>()` | `DataScorpio` |
 | `services.AddDataScorpioSieveCompatibility(...)` | `DataScorpio` |
 | `services.AddDataScorpioTesting(...)` | `DataScorpio.Testing` |
 | `services.AddDataScorpioSqliteTesting(...)` | `DataScorpio.Testing.Sqlite` |

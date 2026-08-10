@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.0.0] - 2026-08-08
+## [1.0.0] - 2026-08-09
 
 ### Added
 
@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Explicit null handling in string filters and native JSON descriptors.
 - Native JSON descriptor parser for filters, filter groups, sorts, search, includes, paging, and presets.
 - Typed `QueryProfile<TEntity>` configuration with filter, sort, search, include, alias, default sort, and max page size support.
+- Assembly discovery for query profiles and convention sets.
 - Custom filters and custom sorts over `IQueryable<T>`.
 - Contract-based reusable custom filters and custom sorts through query convention sets.
 - Query descriptor validation with structured diagnostics for unknown fields, unsupported operations, includes, and paging errors.
@@ -32,4 +33,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Query assertions for success, rejection, validation codes, filtering, sorting, and paging.
 - `DataScorpio.Testing.Sqlite` package for SQLite-backed provider behavior tests.
 - Expanded basic sample covering filtering, sorting, paging, search, OR filters, aliases, custom conventions, null filters, native JSON, and validation.
-- GitHub CI workflow, NuGet release workflow, shared build metadata, test projects, sample project, and repository documentation.
+- Mule-style build and release workflow, NuGet trusted publishing setup, shared build metadata, test projects, sample project, and repository documentation.

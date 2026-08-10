@@ -1,6 +1,7 @@
 namespace DataScorpio.Profiles;
 
 using System.Linq.Expressions;
+using System.Reflection;
 using DataScorpio.Querying;
 
 /// <summary>
@@ -74,6 +75,53 @@ public sealed class QueryProfileRegistryBuilder
     public QueryProfileRegistryBuilder AddConventions<TConventionSet>()
         where TConventionSet : QueryConventionSet, new()
         => AddConventions(new TConventionSet());
+
+    /// <summary>
+    /// Discovers and adds query profiles and convention sets from the assembly that contains the marker type.
+    /// </summary>
+    /// <typeparam name="TMarker">A type from the assembly to scan.</typeparam>
+    /// <returns>The same builder.</returns>
+    public QueryProfileRegistryBuilder FromAssemblyOf<TMarker>()
+        => FromAssemblies(typeof(TMarker).Assembly);
+
+    /// <summary>
+    /// Discovers and adds query profiles and convention sets from an assembly.
+    /// </summary>
+    /// <param name="assembly">The assembly to scan.</param>
+    /// <returns>The same builder.</returns>
+    public QueryProfileRegistryBuilder FromAssembly(Assembly assembly)
+        => FromAssemblies(assembly);
+
+    /// <summary>
+    /// Discovers and adds query profiles and convention sets from assemblies.
+    /// </summary>
+    /// <param name="assemblies">The assemblies to scan.</param>
+    /// <returns>The same builder.</returns>
+    public QueryProfileRegistryBuilder FromAssemblies(params Assembly[] assemblies)
+    {
+        AddDiscoveredConventions(assemblies);
+        AddDiscoveredProfiles(assemblies);
+
+        return this;
+    }
+
+    private void AddDiscoveredProfiles(params Assembly[] assemblies)
+    {
+        foreach (var type in DiscoverTypes(assemblies, typeof(IQueryProfile)))
+        {
+            var profile = (IQueryProfile)Activator.CreateInstance(type, nonPublic: true);
+            profiles.Add(profile.BuildDefinition());
+        }
+    }
+
+    private void AddDiscoveredConventions(params Assembly[] assemblies)
+    {
+        foreach (var type in DiscoverTypes(assemblies, typeof(QueryConventionSet)))
+        {
+            var conventionSet = (QueryConventionSet)Activator.CreateInstance(type, nonPublic: true);
+            AddConventions(conventionSet);
+        }
+    }
 
     /// <summary>
     /// Adds a reusable custom filter for every profile whose entity implements or inherits a contract.
@@ -158,4 +206,33 @@ public sealed class QueryProfileRegistryBuilder
 
         return name.Trim();
     }
+
+    private static IEnumerable<Type> DiscoverTypes(IEnumerable<Assembly> assemblies, Type assignableTo)
+    {
+        if (assemblies == null)
+            throw new ArgumentNullException(nameof(assemblies));
+
+        var seen = new HashSet<Type>();
+
+        foreach (var assembly in assemblies)
+        {
+            if (assembly == null)
+                throw new ArgumentException("Assembly collection cannot contain null values.", nameof(assemblies));
+
+            foreach (var type in assembly.GetTypes().Where(type => CanCreate(type, assignableTo)))
+            {
+                if (seen.Add(type))
+                    yield return type;
+            }
+        }
+    }
+
+    private static bool CanCreate(Type type, Type assignableTo)
+        => type is { IsAbstract: false, IsInterface: false, ContainsGenericParameters: false } &&
+           assignableTo.IsAssignableFrom(type) &&
+           type.GetConstructor(
+               BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic,
+               binder: null,
+               Type.EmptyTypes,
+               modifiers: null) != null;
 }
