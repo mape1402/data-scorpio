@@ -1,7 +1,10 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
+    <IsPackable>true</IsPackable>
     <PackageId>DataScorpio.Testing</PackageId>
-    <Description>Testing helpers for DataScorpio query profiles and requests.</Description>
+    <Title>DataScorpio Testing</Title>
+    <Description>Testing helpers for DataScorpio query profiles, filters, sorts, search, paging, validation errors, and in-memory IQueryable behavior.</Description>
+    <PackageTags>query;filtering;sorting;paging;search;iqueryable;sieve;testing;assertions</PackageTags>
   </PropertyGroup>
 
   <ItemGroup>

@@ -23,6 +23,25 @@ public sealed class DataScorpioServiceCollectionExtensionsTests
     }
 
     [Fact]
+    public void AddDataScorpio_discovers_profiles_and_conventions_from_options()
+    {
+        var services = new ServiceCollection();
+
+        services.AddDataScorpio(options => options.FromAssemblyOf<DataScorpioServiceCollectionExtensionsTests>());
+
+        using var provider = services.BuildServiceProvider();
+        var processor = provider.GetRequiredService<IQueryProcessor>();
+
+        var result = processor.Execute(Customers().AsQueryable(), new QueryRequest
+        {
+            Filters = "named==Ada"
+        });
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal("Ada", Assert.Single(result.Result.Items).Name);
+    }
+
+    [Fact]
     public void AddDataScorpioSieveCompatibility_registers_core_services()
     {
         var services = new ServiceCollection();
@@ -73,6 +92,14 @@ public sealed class DataScorpioServiceCollectionExtensionsTests
         public override void Configure(IQueryProfileBuilder<Customer> builder)
         {
             builder.AllowFilter(customer => customer.Name);
+        }
+    }
+
+    private sealed class DiscoveredQueryConventions : QueryConventionSet
+    {
+        public override void Configure(IQueryConventionBuilder builder)
+        {
+            builder.CustomFilter<IHasName>("named", value => entity => entity.Name == Convert.ToString(value.Value));
         }
     }
 

@@ -1,7 +1,10 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
+    <IsPackable>true</IsPackable>
     <PackageId>DataScorpio</PackageId>
-    <Description>Typed, secure, provider-aware query engine for .NET.</Description>
+    <Title>DataScorpio</Title>
+    <Description>Typed query engine for safe filtering, sorting, search, paging, validation, JSON descriptors, and Sieve-compatible query strings over IQueryable.</Description>
+    <PackageTags>query;filtering;sorting;paging;search;iqueryable;sieve;json;validation</PackageTags>
   </PropertyGroup>
 
   <ItemGroup>

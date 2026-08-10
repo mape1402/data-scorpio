@@ -19,6 +19,7 @@
     <Authors>Elysium Coding</Authors>
     <Company>Elysium Coding</Company>
     <RepositoryUrl>https://github.com/mape1402/data-scorpio</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/mape1402/data-scorpio</PackageProjectUrl>
     <PackageIcon>image.png</PackageIcon>
