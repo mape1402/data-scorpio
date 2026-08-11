@@ -16,6 +16,19 @@ public sealed class QueryableQueryApplier : IQueryableQueryApplier
         IQueryable<TEntity> source,
         QueryDescriptor descriptor,
         QueryProfileDefinition profile)
+        => ApplyQuery(source, descriptor, profile);
+
+    /// <inheritdoc/>
+    public QueryCriteriaResult<TEntity> ApplyCriteria<TEntity>(
+        IQueryable<TEntity> source,
+        QueryDescriptor descriptor,
+        QueryProfileDefinition profile)
+        => QueryCriteriaResult<TEntity>.FromQuery(ApplyQuery(source, descriptor, profile));
+
+    private static IQueryable<TEntity> ApplyQuery<TEntity>(
+        IQueryable<TEntity> source,
+        QueryDescriptor descriptor,
+        QueryProfileDefinition profile)
     {
         if (source == null)
             throw new ArgumentNullException(nameof(source));

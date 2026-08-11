@@ -69,4 +69,64 @@ public static class DataScorpioQueryableExtensions
 
         return new QueryableQueryApplier().Apply(source, descriptor, profile);
     }
+
+    /// <summary>
+    /// Applies a query request and reports whether the resulting query is still provider-backed or materialized.
+    /// </summary>
+    /// <typeparam name="TEntity">The entity type.</typeparam>
+    /// <param name="source">The source query.</param>
+    /// <param name="request">The query request.</param>
+    /// <param name="profile">The query profile.</param>
+    /// <returns>The criteria application result.</returns>
+    public static QueryCriteriaResult<TEntity> ApplyDataScorpioCriteria<TEntity>(
+        this IQueryable<TEntity> source,
+        QueryRequest request,
+        QueryProfile<TEntity> profile)
+    {
+        if (profile == null)
+            throw new ArgumentNullException(nameof(profile));
+
+        var descriptor = new SieveQueryParser().Parse(request);
+        return source.ApplyDataScorpioCriteria(descriptor, profile.BuildDefinition());
+    }
+
+    /// <summary>
+    /// Applies a parsed descriptor and reports whether the resulting query is still provider-backed or materialized.
+    /// </summary>
+    /// <typeparam name="TEntity">The entity type.</typeparam>
+    /// <param name="source">The source query.</param>
+    /// <param name="descriptor">The parsed query descriptor.</param>
+    /// <param name="profile">The query profile.</param>
+    /// <returns>The criteria application result.</returns>
+    public static QueryCriteriaResult<TEntity> ApplyDataScorpioCriteria<TEntity>(
+        this IQueryable<TEntity> source,
+        QueryDescriptor descriptor,
+        QueryProfile<TEntity> profile)
+    {
+        if (profile == null)
+            throw new ArgumentNullException(nameof(profile));
+
+        return source.ApplyDataScorpioCriteria(descriptor, profile.BuildDefinition());
+    }
+
+    /// <summary>
+    /// Applies a parsed descriptor and reports whether the resulting query is still provider-backed or materialized.
+    /// </summary>
+    /// <typeparam name="TEntity">The entity type.</typeparam>
+    /// <param name="source">The source query.</param>
+    /// <param name="descriptor">The parsed query descriptor.</param>
+    /// <param name="profile">The query profile definition.</param>
+    /// <returns>The criteria application result.</returns>
+    public static QueryCriteriaResult<TEntity> ApplyDataScorpioCriteria<TEntity>(
+        this IQueryable<TEntity> source,
+        QueryDescriptor descriptor,
+        QueryProfileDefinition profile)
+    {
+        var validation = new QueryDescriptorValidator().Validate(descriptor, profile);
+
+        if (!validation.IsValid)
+            throw new DataScorpioQueryException(validation);
+
+        return new QueryableQueryApplier().ApplyCriteria(source, descriptor, profile);
+    }
 }

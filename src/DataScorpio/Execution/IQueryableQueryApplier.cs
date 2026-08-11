@@ -20,4 +20,17 @@ public interface IQueryableQueryApplier
         IQueryable<TEntity> source,
         QueryDescriptor descriptor,
         QueryProfileDefinition profile);
+
+    /// <summary>
+    /// Applies a query descriptor and reports whether the resulting query is still provider-backed or materialized.
+    /// </summary>
+    /// <typeparam name="TEntity">The entity type.</typeparam>
+    /// <param name="source">The source query.</param>
+    /// <param name="descriptor">The parsed query descriptor.</param>
+    /// <param name="profile">The profile definition.</param>
+    /// <returns>The criteria application result.</returns>
+    QueryCriteriaResult<TEntity> ApplyCriteria<TEntity>(
+        IQueryable<TEntity> source,
+        QueryDescriptor descriptor,
+        QueryProfileDefinition profile);
 }

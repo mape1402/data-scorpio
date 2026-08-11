@@ -435,6 +435,28 @@ Example URL:
 
 The core package applies queries to `IQueryable<T>`. That means it can run over EF Core, another ORM that exposes `IQueryable<T>`, or in-memory data.
 
+Adapters that need to keep composing after DataScorpio can apply criteria without forcing a terminal page result:
+
+```csharp
+var criteria = processor.ApplyCriteria(db.Customers.AsNoTracking(), new QueryRequest
+{
+    Filters = "Status==Active",
+    Sorts = "Name"
+});
+
+if (criteria.IsMaterialized)
+{
+    var items = criteria.Items;
+}
+else
+{
+    var totalRows = await criteria.Query.CountAsync();
+    var page = await criteria.Query.Skip(20).Take(10).ToListAsync();
+}
+```
+
+`QueryCriteriaResult<T>` makes the provider transition explicit. When `IsMaterialized` is false, `Query` still supports async enumeration. When a custom filter or another operation returns an in-memory query, `IsMaterialized` is true and `Items` should be used instead of calling EF async methods on `Items.AsQueryable()`.
+
 DataScorpio does not ship separate EF Core, ASP.NET Core, or DynaBee packages. The core `IQueryable<T>` pipeline is the integration point.
 
 ## Testing
@@ -536,6 +558,7 @@ Core:
 | `IQueryDescriptorValidator` | Validates descriptors against a profile before execution. |
 | `IQueryableQueryApplier` | Applies validated descriptors to `IQueryable<T>`. |
 | `IQueryProcessor` | Parses, validates, applies, counts, pages, and returns results. |
+| `QueryCriteriaResult<T>` | Criteria application result that exposes whether the query is still async provider-backed or materialized. |
 | `QueryExecutionResult<T>` | Success or rejected result with validation diagnostics. |
 | `QueryResult<T>` | Items and paging metadata. |
 
