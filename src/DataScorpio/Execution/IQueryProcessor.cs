@@ -55,4 +55,52 @@ public interface IQueryProcessor
         IQueryable<TEntity> source,
         QueryDescriptor descriptor,
         QueryProfileDefinition profile);
+
+    /// <summary>
+    /// Applies criteria from a query request using a registered profile without building a terminal page result.
+    /// </summary>
+    /// <typeparam name="TEntity">The entity type.</typeparam>
+    /// <param name="source">The source query.</param>
+    /// <param name="request">The query request.</param>
+    /// <returns>The criteria application result.</returns>
+    QueryCriteriaResult<TEntity> ApplyCriteria<TEntity>(
+        IQueryable<TEntity> source,
+        QueryRequest request);
+
+    /// <summary>
+    /// Applies criteria from a parsed descriptor using a registered profile without building a terminal page result.
+    /// </summary>
+    /// <typeparam name="TEntity">The entity type.</typeparam>
+    /// <param name="source">The source query.</param>
+    /// <param name="descriptor">The parsed query descriptor.</param>
+    /// <returns>The criteria application result.</returns>
+    QueryCriteriaResult<TEntity> ApplyCriteria<TEntity>(
+        IQueryable<TEntity> source,
+        QueryDescriptor descriptor);
+
+    /// <summary>
+    /// Applies criteria from a query request using an explicit profile without building a terminal page result.
+    /// </summary>
+    /// <typeparam name="TEntity">The entity type.</typeparam>
+    /// <param name="source">The source query.</param>
+    /// <param name="request">The query request.</param>
+    /// <param name="profile">The profile definition.</param>
+    /// <returns>The criteria application result.</returns>
+    QueryCriteriaResult<TEntity> ApplyCriteria<TEntity>(
+        IQueryable<TEntity> source,
+        QueryRequest request,
+        QueryProfileDefinition profile);
+
+    /// <summary>
+    /// Applies criteria from a parsed descriptor using an explicit profile without building a terminal page result.
+    /// </summary>
+    /// <typeparam name="TEntity">The entity type.</typeparam>
+    /// <param name="source">The source query.</param>
+    /// <param name="descriptor">The parsed query descriptor.</param>
+    /// <param name="profile">The profile definition.</param>
+    /// <returns>The criteria application result.</returns>
+    QueryCriteriaResult<TEntity> ApplyCriteria<TEntity>(
+        IQueryable<TEntity> source,
+        QueryDescriptor descriptor,
+        QueryProfileDefinition profile);
 }

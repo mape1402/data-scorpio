@@ -103,6 +103,53 @@ public sealed class QueryProcessor : IQueryProcessor
         });
     }
 
+    /// <inheritdoc/>
+    public QueryCriteriaResult<TEntity> ApplyCriteria<TEntity>(
+        IQueryable<TEntity> source,
+        QueryRequest request)
+        => ApplyCriteria(source, request, profiles.GetProfile<TEntity>());
+
+    /// <inheritdoc/>
+    public QueryCriteriaResult<TEntity> ApplyCriteria<TEntity>(
+        IQueryable<TEntity> source,
+        QueryDescriptor descriptor)
+        => ApplyCriteria(source, descriptor, profiles.GetProfile<TEntity>());
+
+    /// <inheritdoc/>
+    public QueryCriteriaResult<TEntity> ApplyCriteria<TEntity>(
+        IQueryable<TEntity> source,
+        QueryRequest request,
+        QueryProfileDefinition profile)
+    {
+        if (request == null)
+            throw new ArgumentNullException(nameof(request));
+
+        return ApplyCriteria(source, parser.Parse(request), profile);
+    }
+
+    /// <inheritdoc/>
+    public QueryCriteriaResult<TEntity> ApplyCriteria<TEntity>(
+        IQueryable<TEntity> source,
+        QueryDescriptor descriptor,
+        QueryProfileDefinition profile)
+    {
+        if (source == null)
+            throw new ArgumentNullException(nameof(source));
+
+        if (descriptor == null)
+            throw new ArgumentNullException(nameof(descriptor));
+
+        if (profile == null)
+            throw new ArgumentNullException(nameof(profile));
+
+        var validation = validator.Validate(descriptor, profile);
+
+        if (!validation.IsValid)
+            throw new DataScorpioQueryException(validation);
+
+        return applier.ApplyCriteria(source, descriptor, profile);
+    }
+
     private static int CalculatePageCount(long rowCount, int? pageSize)
     {
         if (!pageSize.HasValue || pageSize.Value <= 0)
